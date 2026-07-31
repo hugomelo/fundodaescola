@@ -1,0 +1,59 @@
+# Production stack for the VPS (vps.prout.io).
+# API is served over TLS by Caddy at https://fundo-api.prout.io
+#
+# Copy .env.production.example to .env and fill in the secrets, then:
+#   docker compose up -d --build
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-colheita}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME:-colheita_production}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-colheita}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: postgres://${DATABASE_USER:-colheita}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME:-colheita_production}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?set SECRET_KEY_BASE}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://<your-github-username>.github.io}
+      API_DOMAIN: ${API_DOMAIN:-fundo-api.prout.io}
+    # Run migrations on boot, then start Puma.
+    command: >
+      sh -c "bundle exec rails db:prepare && bundle exec puma -C config/puma.rb"
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-fundo-api.prout.io}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

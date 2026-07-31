@@ -1,0 +1,24 @@
+# Colheita Coletiva — monorepo root ignores
+
+# OS / editors
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Node (web/)
+web/node_modules/
+web/dist/
+web/.env.local
+
+# Ruby / Rails (api/)
+api/.env
+api/tmp/
+api/log/*.log
+api/storage/
+api/config/master.key
+/api/db/import_data/*.csv
+
+# Secrets
+*.pem
+.env
