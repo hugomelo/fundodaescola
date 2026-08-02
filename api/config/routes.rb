@@ -13,6 +13,7 @@ Rails.application.routes.draw do
       end
     end
     get "grades/:id/overview", to: "grades#overview"
+    get "grades/:id/cost_plan", to: "grades#cost_plan"
 
     # Admin-facing
     namespace :admin do
@@ -21,6 +22,7 @@ Rails.application.routes.draw do
         resources :payer_mappings, only: [:index, :create]
         resources :investment_entries, only: [:index, :create]
         resources :events, only: [:index, :create]
+        resources :trips, only: [:index, :create]
         resources :payments, only: [:index, :create] do
           collection { post :import }
         end
@@ -34,6 +36,10 @@ Rails.application.routes.draw do
       resources :payer_mappings, only: [:update, :destroy]
       resources :investment_entries, only: [:update, :destroy]
       resources :events, only: [:update, :destroy]
+      resources :trips, only: [:update, :destroy] do
+        resources :cost_entries, only: [:create], controller: "trip_cost_entries"
+      end
+      resources :trip_cost_entries, only: [:update, :destroy]
       resources :users
     end
   end

@@ -1,11 +1,12 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import client from "../../api/client";
 import { useAdminStore } from "../../stores/admin";
 import { brl, monthLabel } from "../../utils/format";
 
 const admin = useAdminStore();
 const students = ref([]);
+const activeCount = computed(() => students.value.filter((s) => s.active).length);
 const showForm = ref(false);
 const form = ref({ full_name: "", display_name: "", enrolled_from: "", enrolled_until: "" });
 
@@ -31,7 +32,7 @@ async function toggleActive(s) {
 <template>
   <div class="card">
     <div class="title-row">
-      <h2>Alunos <span class="muted" style="font-weight:400">({{ students.length }})</span></h2>
+      <h2>Alunos <span class="muted" style="font-weight:400">({{ activeCount }} ativos de {{ students.length }})</span></h2>
       <button @click="showForm = !showForm">{{ showForm ? "Cancelar" : "Novo aluno" }}</button>
     </div>
 
@@ -45,7 +46,7 @@ async function toggleActive(s) {
 
     <table>
       <thead>
-        <tr><th>Nome</th><th>Período</th><th class="right">Contribuído</th><th class="right">Saldo</th><th></th></tr>
+        <tr><th>Nome</th><th>Período</th><th class="right">Contribuído</th><th class="right">Prometido atual</th><th></th></tr>
       </thead>
       <tbody>
         <tr v-for="s in students" :key="s.id">
@@ -55,7 +56,7 @@ async function toggleActive(s) {
           </td>
           <td class="muted">{{ monthLabel(s.enrolled_from) || "—" }} → {{ monthLabel(s.enrolled_until) || "atual" }}</td>
           <td class="right">{{ s.contributed_cents != null ? brl(s.contributed_cents) : "—" }}</td>
-          <td class="right">—</td>
+          <td class="right">{{ s.latest_pledge_cents != null ? brl(s.latest_pledge_cents) : "—" }}</td>
           <td class="right"><button class="ghost" @click="toggleActive(s)">{{ s.active ? "Desativar" : "Ativar" }}</button></td>
         </tr>
       </tbody>

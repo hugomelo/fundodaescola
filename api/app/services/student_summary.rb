@@ -1,5 +1,8 @@
 # Builds a month-by-month breakdown (pledged vs. contributed) plus totals
 # and balance for a single student.
+#
+# Pledges are effective-from markers: the amount set for a month carries forward
+# to later months until a new pledge changes it.
 class StudentSummary
   def self.call(student, up_to: Date.current.beginning_of_month)
     new(student, up_to: up_to).call
@@ -32,38 +35,41 @@ class StudentSummary
 
   private
 
+  def pledge_entries
+    @pledge_entries ||= @student.monthly_pledges.order(:month).to_a
+  end
+
   def month_rows
     months.map do |m|
+      eff = @student.effective_pledge(m, pledge_entries) # [amount, status] or nil
       {
         month: m,
-        pledged_cents: pledged_by_month[m],
+        pledged_cents: eff&.first,
         contributed_cents: contributed_by_month[m] || 0,
-        status: status_by_month[m]
+        status: eff&.last
       }
     end
   end
 
   def months
-    keys = (pledged_by_month.keys + contributed_by_month.keys)
-    keys << @student.enrolled_from if @student.enrolled_from
-    keys.compact!
-    return [] if keys.empty?
+    starts = [pledge_entries.first&.month, contributed_by_month.keys.min, @student.enrolled_from]
+             .compact.map { |d| d.to_date.beginning_of_month }
+    return [] if starts.empty?
 
-    (keys.min..[keys.max, @up_to].min).select { |d| d.day == 1 }
-  end
+    start = starts.min
+    last = @up_to
+    if @student.enrolled_until && @student.enrolled_until.beginning_of_month < last
+      last = @student.enrolled_until.beginning_of_month
+    end
+    return [] if last < start
 
-  def pledged_by_month
-    @pledged_by_month ||= @student.monthly_pledges
-      .where(status: :pledged)
-      .group(:month).sum(:amount_cents)
-      .transform_keys { |k| k.to_date.beginning_of_month }
-  end
-
-  def status_by_month
-    @status_by_month ||= @student.monthly_pledges
-      .group(:month).maximum(:status)
-      .transform_keys { |k| k.to_date.beginning_of_month }
-      .transform_values { |v| MonthlyPledge.statuses.key(v) }
+    result = []
+    m = start
+    while m <= last
+      result << m
+      m = m.next_month
+    end
+    result
   end
 
   def contributed_by_month

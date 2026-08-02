@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Production image for the Colheita Coletiva Rails API.
+# Production image for the Fundo da Escola Rails API.
 ARG RUBY_VERSION=3.4.4
 FROM ruby:$RUBY_VERSION-slim AS base
 

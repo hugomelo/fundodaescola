@@ -25,9 +25,9 @@ jobs:
         working-directory: web
     env:
       # The API the built site will talk to.
-      VITE_API_BASE_URL: https://fundo-api.prout.io/api
-      # Base path = "/<repo-name>/" for a project Pages site.
-      VITE_BASE_PATH: /fundo-escola/
+      VITE_API_BASE_URL: https://api.fundodaescola.com.br/api
+      # Served at the domain root via the custom domain (fundodaescola.com.br).
+      VITE_BASE_PATH: /
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

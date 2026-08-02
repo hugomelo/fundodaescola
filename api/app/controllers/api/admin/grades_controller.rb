@@ -69,6 +69,7 @@ module Api
 
         base.merge(
           description: grade.description,
+          inflation_rate: grade.inflation_rate,
           net_raised_cents: grade.net_raised_cents,
           student_contributions_cents: grade.student_contributions_cents,
           event_cents: grade.event_cents,
@@ -81,7 +82,7 @@ module Api
       def grade_params
         params.require(:grade).permit(
           :name, :school_name, :currency, :target_total_cents,
-          :school_year_start, :school_year_end, :description
+          :school_year_start, :school_year_end, :description, :inflation_rate
         )
       end
     end

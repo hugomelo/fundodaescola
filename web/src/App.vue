@@ -16,7 +16,7 @@ function logout() {
 <template>
   <header v-if="authed" class="topbar">
     <div class="brand" @click="router.push('/')">
-      <span class="mark">🌾</span> Colheita Coletiva
+      <span class="mark">🌾</span> Fundo da Escola
     </div>
     <nav>
       <RouterLink to="/">Início</RouterLink>

@@ -32,7 +32,7 @@ Rails.application.configure do
 
   # Allow the public API domain (served via Caddy). Additional hosts can be
   # supplied as a comma-separated APP_HOSTS env var.
-  config.hosts << ENV.fetch("API_DOMAIN", "fundo-api.prout.io")
+  config.hosts << ENV.fetch("API_DOMAIN", "api.fundodaescola.com.br")
   ENV.fetch("APP_HOSTS", "").split(",").map(&:strip).reject(&:empty?).each { |h| config.hosts << h }
   # Health-check requests (from Docker) bypass host auth.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }

@@ -42,7 +42,11 @@ module Api
       end
 
       def month_param
-        Date.parse(params.require(:investment_entry)[:month].to_s).beginning_of_month
+        raw = params.require(:investment_entry)[:month].to_s.strip
+        raw = "#{raw}-01" if raw =~ /\A\d{4}-\d{2}\z/
+        Date.parse(raw).beginning_of_month
+      rescue Date::Error
+        raise ActionController::BadRequest, "invalid month: #{raw}"
       end
 
       def entry_json(entry)

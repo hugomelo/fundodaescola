@@ -1,4 +1,4 @@
-# 🌾 Colheita Coletiva
+# 🌾 Fundo da Escola
 
 Ferramenta web para acompanhar o **fundo de viagens** de uma turma da escola Waldorf.
 Cada responsável vê **apenas** as contribuições do(s) seu(s) filho(s) — quanto já
@@ -12,7 +12,7 @@ Suporta **múltiplas turmas** com administradores por turma.
 | Camada | Tecnologia | Onde roda |
 |---|---|---|
 | Frontend | Vue 3 + Vite (`web/`) | GitHub Pages |
-| Backend | Rails 8 API-only (`api/`) | VPS (`fundo-api.prout.io`) |
+| Backend | Rails 8 API-only (`api/`) | VPS (`api.fundodaescola.com.br`) |
 | Banco | PostgreSQL | VPS (Docker) |
 | Auth | JWT (Bearer) | — |
 
@@ -115,18 +115,25 @@ muda de conta. O **rendimento** (juros) é lançado à parte em
 
 ## Deploy
 
-### Backend (VPS)
-1. Aponte o DNS `fundo-api.prout.io` para o VPS.
+### Backend (VPS `vps.prout.io`, servido em `api.fundodaescola.com.br`)
+1. Aponte o DNS **`api.fundodaescola.com.br`** (registro A) para o IP do `vps.prout.io`.
 2. Copie `.env.production.example` para `.env` e preencha os segredos
-   (`openssl rand -hex 64` para `SECRET_KEY_BASE` e `JWT_SECRET`; defina `CORS_ORIGINS`
-   com a URL do GitHub Pages).
-3. Suba a stack (Postgres + API + Caddy/TLS):
+   (`openssl rand -hex 64` para `SECRET_KEY_BASE` e `JWT_SECRET`;
+   `CORS_ORIGINS=https://fundodaescola.com.br`; `API_DOMAIN=api.fundodaescola.com.br`).
+3. Suba a stack (Postgres + API + Caddy/TLS) no VPS:
    ```bash
    docker compose up -d --build
    ```
-   As migrações rodam automaticamente no boot (`rails db:prepare`).
+   O Caddy provisiona o certificado TLS automaticamente e faz proxy para o Puma;
+   as migrações rodam no boot (`rails db:prepare`).
 
-### Frontend (GitHub Pages)
+### Frontend (GitHub Pages em `fundodaescola.com.br`)
 `.github/workflows/pages.yml` faz build de `web/` e publica no Pages a cada push em `main`.
-Ajuste `VITE_API_BASE_URL` e `VITE_BASE_PATH` (nome do repositório) no workflow se necessário,
-e habilite **Settings → Pages → Source: GitHub Actions**.
+O build usa `VITE_API_BASE_URL=https://api.fundodaescola.com.br/api` e `VITE_BASE_PATH=/`,
+e `web/public/CNAME` fixa o domínio **`fundodaescola.com.br`**. Passos:
+1. No provedor de DNS, aponte `fundodaescola.com.br` para o GitHub Pages
+   (registros A do apex para os IPs do Pages, ou `www` como CNAME para
+   `<usuário>.github.io`).
+2. Em **Settings → Pages → Source: GitHub Actions** e defina o **Custom domain**
+   como `fundodaescola.com.br` (o `CNAME` no build já cobre isso).
+

@@ -5,6 +5,7 @@ const routes = [
   { path: "/login", name: "login", component: () => import("../views/LoginView.vue"), meta: { public: true } },
   { path: "/", name: "home", component: () => import("../views/HomeView.vue") },
   { path: "/aluno/:id", name: "student", component: () => import("../views/ParentDashboardView.vue"), props: true },
+  { path: "/plano/:gradeId", name: "cost-plan", component: () => import("../views/CostPlanView.vue"), props: true },
   {
     path: "/admin",
     component: () => import("../views/admin/AdminLayout.vue"),
@@ -18,6 +19,7 @@ const routes = [
       { path: "alunos/:id", name: "admin-student", component: () => import("../views/admin/StudentPledgesView.vue"), props: true },
       { path: "mapeamentos", name: "admin-mappings", component: () => import("../views/admin/MappingsView.vue") },
       { path: "rendimentos", name: "admin-investments", component: () => import("../views/admin/InvestmentsView.vue") },
+      { path: "viagens", name: "admin-trips", component: () => import("../views/admin/TripsView.vue") },
       { path: "usuarios", name: "admin-users", component: () => import("../views/admin/UsersView.vue") },
       { path: "configuracoes", name: "admin-settings", component: () => import("../views/admin/SettingsView.vue") },
     ],

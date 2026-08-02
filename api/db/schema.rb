@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_31_133106) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_31_191810) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,6 +29,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_133106) do
     t.datetime "created_at", null: false
     t.string "currency", default: "BRL", null: false
     t.text "description"
+    t.decimal "inflation_rate", precision: 6, scale: 4, default: "0.06", null: false
     t.string "name", null: false
     t.string "school_name"
     t.date "school_year_end"
@@ -114,6 +115,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_133106) do
     t.index ["grade_id"], name: "index_students_on_grade_id"
   end
 
+  create_table "trip_cost_entries", force: :cascade do |t|
+    t.bigint "amount_cents", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "trip_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "year", null: false
+    t.index ["trip_id", "year"], name: "index_trip_cost_entries_on_trip_id_and_year", unique: true
+    t.index ["trip_id"], name: "index_trip_cost_entries_on_trip_id"
+  end
+
+  create_table "trips", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "grade_id", null: false
+    t.string "level"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "trip_year", null: false
+    t.datetime "updated_at", null: false
+    t.index ["grade_id", "position"], name: "index_trips_on_grade_id_and_position"
+    t.index ["grade_id"], name: "index_trips_on_grade_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -137,5 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_31_133106) do
   add_foreign_key "student_accesses", "students"
   add_foreign_key "student_accesses", "users"
   add_foreign_key "students", "grades"
+  add_foreign_key "trip_cost_entries", "trips"
+  add_foreign_key "trips", "grades"
   add_foreign_key "users", "grades"
 end

@@ -17,6 +17,7 @@ const links = [
   { to: { name: "admin-students" }, label: "Alunos" },
   { to: { name: "admin-mappings" }, label: "Mapeamentos" },
   { to: { name: "admin-investments" }, label: "Rendimentos" },
+  { to: { name: "admin-trips" }, label: "Viagens" },
   { to: { name: "admin-users" }, label: "Usuários" },
   { to: { name: "admin-settings" }, label: "Configurações" },
 ];

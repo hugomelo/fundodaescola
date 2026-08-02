@@ -42,12 +42,13 @@ module Api
           display_name: student.display_name,
           active: student.active,
           enrolled_from: student.enrolled_from,
-          enrolled_until: student.enrolled_until
+          enrolled_until: student.enrolled_until,
+          contributed_cents: student.contributed_cents,
+          latest_pledge_cents: student.effective_pledge(Date.current.beginning_of_month)&.first
         }
         return base unless detailed
 
         base.merge(
-          contributed_cents: student.contributed_cents,
           expected_cents: student.expected_cents,
           balance_cents: student.balance_cents,
           pledges: student.monthly_pledges.order(:month).map { |p| pledge_json(p) }

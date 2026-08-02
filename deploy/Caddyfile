@@ -1,5 +1,5 @@
 # Automatic HTTPS via Let's Encrypt. Point the DNS A record for
-# fundo-api.prout.io at this VPS before starting the stack.
+# api.fundodaescola.com.br at this VPS (vps.prout.io) before starting the stack.
 {$API_DOMAIN} {
 	encode gzip
 	reverse_proxy api:3000

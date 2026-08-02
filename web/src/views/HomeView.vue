@@ -49,6 +49,13 @@ onMounted(async () => {
 
     <div style="margin-top: 1.5rem" v-if="gradeId">
       <GradeOverview :grade-id="gradeId" />
+      <div class="card plan-cta">
+        <div>
+          <strong>Quanto a turma precisa acumular?</strong>
+          <div class="muted">Veja o plano de custos das viagens e o valor por aluno.</div>
+        </div>
+        <button class="secondary" @click="router.push({ name: 'cost-plan', params: { gradeId } })">Ver plano</button>
+      </div>
     </div>
   </div>
 </template>
@@ -63,4 +70,5 @@ onMounted(async () => {
 }
 .name { font-weight: 600; }
 .admin-cta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
+.plan-cta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; }
 </style>

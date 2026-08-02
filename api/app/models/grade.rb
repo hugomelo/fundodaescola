@@ -4,6 +4,7 @@ class Grade < ApplicationRecord
   has_many :payer_mappings, dependent: :destroy
   has_many :investment_entries, dependent: :destroy
   has_many :events, dependent: :destroy
+  has_many :trips, dependent: :destroy
   has_many :users, dependent: :nullify
 
   validates :name, presence: true
@@ -31,5 +32,9 @@ class Grade < ApplicationRecord
     return 0.0 if target_total_cents.to_i.zero?
 
     net_raised_cents.to_f / target_total_cents
+  end
+
+  def active_students_count
+    students.active.count
   end
 end

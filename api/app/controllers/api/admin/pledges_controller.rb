@@ -12,7 +12,7 @@ module Api
       def create
         student = find_student_in_scope!(params[:student_id])
         pledge = student.monthly_pledges.find_or_initialize_by(month: month_param)
-        pledge.assign_attributes(pledge_params)
+        pledge.assign_attributes(pledge_params.except(:month))
         pledge.save!
         render json: { pledge: pledge_json(pledge) }, status: :created
       end
@@ -21,7 +21,9 @@ module Api
       def update
         pledge = MonthlyPledge.find(params[:id])
         find_student_in_scope!(pledge.student_id)
-        pledge.update!(pledge_params)
+        attrs = pledge_params.except(:month)
+        attrs[:month] = month_param if params.dig(:monthly_pledge, :month).present?
+        pledge.update!(attrs)
         render json: { pledge: pledge_json(pledge) }
       end
 
@@ -36,7 +38,12 @@ module Api
       private
 
       def month_param
-        Date.parse(params.require(:monthly_pledge)[:month].to_s).beginning_of_month
+        raw = params.require(:monthly_pledge)[:month].to_s.strip
+        # Accept "YYYY-MM" (from <input type="month">) as well as full dates.
+        raw = "#{raw}-01" if raw =~ /\A\d{4}-\d{2}\z/
+        Date.parse(raw).beginning_of_month
+      rescue Date::Error
+        raise ActionController::BadRequest, "invalid month: #{raw}"
       end
 
       def pledge_json(pledge)

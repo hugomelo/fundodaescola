@@ -54,14 +54,19 @@ const pledges = computed(() => student.value?.pledges || []);
     </div>
 
     <div class="card" style="margin-top:1.5rem">
-      <h3>Valores prometidos por mês</h3>
+      <h3>Valores prometidos</h3>
+      <p class="muted" style="margin:.2rem 0 .8rem">
+        Cada valor vale <strong>a partir do mês informado</strong> e permanece até o próximo.
+        Ex.: ago/24 = R$130 e jul/25 = R$175 → cobra R$130 de ago/24 a jun/25 e R$175 de jul/25 em diante.
+        Basta cadastrar os meses em que o valor muda.
+      </p>
       <form class="new-form" @submit.prevent="addPledge">
         <input v-model="newPledge.month" type="month" required />
         <input v-model="newPledge.amount" placeholder="Valor (ex: 110,00)" required />
-        <button type="submit">Adicionar / atualizar mês</button>
+        <button type="submit">Adicionar / atualizar</button>
       </form>
       <table>
-        <thead><tr><th>Mês</th><th class="right">Prometido</th><th></th></tr></thead>
+        <thead><tr><th>Vigente a partir de</th><th class="right">Prometido / mês</th><th></th></tr></thead>
         <tbody>
           <tr v-for="p in pledges" :key="p.id">
             <td>{{ monthLabel(p.month) }}</td>

@@ -30,8 +30,8 @@ async function submit() {
   <div class="login-wrap">
     <div class="card login-card">
       <div class="logo">🌾</div>
-      <h1>Colheita Coletiva</h1>
-      <p class="muted">Fundo de viagens da turma</p>
+      <h1>Fundo da Escola</h1>
+      <p class="muted">Fundo de viagens pedagógicas</p>
       <form @submit.prevent="submit">
         <label>E-mail</label>
         <input v-model="email" type="email" autocomplete="email" required placeholder="voce@exemplo.com" />

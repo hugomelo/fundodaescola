@@ -104,7 +104,7 @@ async function createGrade() {
           <input v-model="form.school_year_end" type="date" />
         </label>
         <label class="full">Descrição
-          <input v-model="form.description" placeholder="Fundo de viagens da turma..." />
+          <input v-model="form.description" placeholder="Fundo de viagens pedagógicas..." />
         </label>
       </div>
       <div class="row" style="align-items:center; margin-top:1rem">
