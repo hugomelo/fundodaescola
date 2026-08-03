@@ -6,12 +6,37 @@ import { brl, monthLabel } from "../../utils/format";
 const props = defineProps({ id: { type: [Number, String], required: true } });
 const student = ref(null);
 const newPledge = ref({ month: "", amount: "" });
+const enrollment = ref({ from: "", until: "" });
+const savingEnrollment = ref(false);
+
+function toMonthInput(value) {
+  return value ? String(value).slice(0, 7) : "";
+}
 
 async function load() {
   const { data } = await client.get(`/admin/students/${props.id}`);
   student.value = data.student;
+  enrollment.value = {
+    from: toMonthInput(data.student.enrolled_from),
+    until: toMonthInput(data.student.enrolled_until),
+  };
 }
 watch(() => props.id, load, { immediate: true });
+
+async function saveEnrollment() {
+  savingEnrollment.value = true;
+  try {
+    await client.patch(`/admin/students/${props.id}`, {
+      student: {
+        enrolled_from: enrollment.value.from ? `${enrollment.value.from}-01` : null,
+        enrolled_until: enrollment.value.until ? `${enrollment.value.until}-01` : null,
+      },
+    });
+    await load();
+  } finally {
+    savingEnrollment.value = false;
+  }
+}
 
 async function addPledge() {
   const cents = Math.round(parseFloat(String(newPledge.value.amount).replace(",", ".")) * 100);
@@ -54,6 +79,18 @@ const pledges = computed(() => student.value?.pledges || []);
     </div>
 
     <div class="card" style="margin-top:1.5rem">
+      <h3>Período de matrícula</h3>
+      <p class="muted" style="margin:.2rem 0 .8rem">
+        O esperado acumula só dentro deste período. Deixe a saída em branco se o aluno ainda está na turma.
+      </p>
+      <form class="new-form" @submit.prevent="saveEnrollment">
+        <label>Início <input v-model="enrollment.from" type="month" /></label>
+        <label>Saída <input v-model="enrollment.until" type="month" /></label>
+        <button type="submit" :disabled="savingEnrollment">{{ savingEnrollment ? "Salvando…" : "Salvar período" }}</button>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
       <h3>Valores prometidos</h3>
       <p class="muted" style="margin:.2rem 0 .8rem">
         Cada valor vale <strong>a partir do mês informado</strong> e permanece até o próximo.
@@ -88,4 +125,5 @@ const pledges = computed(() => student.value?.pledges || []);
 
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; padding: 1rem; background: #faf7f0; border-radius: 8px; }
+.new-form label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); gap: 0.2rem; }
 </style>
