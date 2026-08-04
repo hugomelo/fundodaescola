@@ -3,7 +3,10 @@ import { useAuthStore } from "../stores/auth";
 
 const routes = [
   { path: "/login", name: "login", component: () => import("../views/LoginView.vue"), meta: { public: true } },
+  { path: "/esqueci-senha", name: "forgot-password", component: () => import("../views/ForgotPasswordView.vue"), meta: { public: true } },
+  { path: "/redefinir-senha", name: "reset-password", component: () => import("../views/ResetPasswordView.vue"), meta: { public: true } },
   { path: "/", name: "home", component: () => import("../views/HomeView.vue") },
+  { path: "/perfil", name: "profile", component: () => import("../views/ProfileView.vue") },
   { path: "/aluno/:id", name: "student", component: () => import("../views/ParentDashboardView.vue"), props: true },
   { path: "/plano/:gradeId", name: "cost-plan", component: () => import("../views/CostPlanView.vue"), props: true },
   {

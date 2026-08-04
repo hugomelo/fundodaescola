@@ -3,7 +3,10 @@ Rails.application.routes.draw do
 
   namespace :api do
     post "auth/login", to: "sessions#create"
-    get  "me", to: "me#show"
+    post "auth/forgot_password", to: "password_resets#create"
+    post "auth/reset_password", to: "password_resets#update"
+    get   "me", to: "me#show"
+    patch "me", to: "me#update"
 
     # Parent-facing (scoped to the current user's access)
     resources :students, only: [] do

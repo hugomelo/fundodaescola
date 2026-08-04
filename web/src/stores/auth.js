@@ -33,6 +33,11 @@ export const useAuthStore = defineStore("auth", {
         this.loading = false;
       }
     },
+    async updateProfile(attrs) {
+      const { data } = await client.patch("/me", { user: attrs });
+      this.user = data.user;
+      return data.user;
+    },
     logout() {
       this.token = null;
       this.user = null;

@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  RESET_PASSWORD_EXPIRY = 2.hours
+
   has_secure_password
 
   belongs_to :grade, optional: true
@@ -33,6 +35,34 @@ class User < ApplicationRecord
     return Student.where(id: a_student_id, grade_id: grade_id).exists? if grade_admin?
 
     student_accesses.where(student_id: a_student_id).exists?
+  end
+
+  # Returns the raw token (send this in the email). Only a SHA-256 digest is stored.
+  def generate_password_reset_token!
+    raw = SecureRandom.urlsafe_base64(32)
+    update!(
+      reset_password_token: self.class.digest_reset_token(raw),
+      reset_password_sent_at: Time.current
+    )
+    raw
+  end
+
+  def clear_password_reset_token!
+    update!(reset_password_token: nil, reset_password_sent_at: nil)
+  end
+
+  def password_reset_period_valid?
+    reset_password_sent_at.present? && reset_password_sent_at > RESET_PASSWORD_EXPIRY.ago
+  end
+
+  def self.find_by_password_reset_token(raw)
+    return nil if raw.blank?
+
+    find_by(reset_password_token: digest_reset_token(raw))
+  end
+
+  def self.digest_reset_token(raw)
+    Digest::SHA256.hexdigest(raw.to_s)
   end
 
   private

@@ -21,7 +21,10 @@ function logout() {
     <nav>
       <RouterLink to="/">Início</RouterLink>
       <RouterLink v-if="auth.isAdmin" to="/admin">Administração</RouterLink>
-      <span class="who muted">{{ auth.user?.name || auth.user?.email }}</span>
+      <RouterLink to="/perfil" class="profile-link">
+        <span class="who">{{ auth.user?.name || auth.user?.email }}</span>
+        <span class="profile-short">Perfil</span>
+      </RouterLink>
       <button class="ghost" @click="logout">Sair</button>
     </nav>
   </header>
@@ -38,5 +41,9 @@ function logout() {
 .mark { font-size: 1.2rem; }
 nav { display: flex; align-items: center; gap: 1.1rem; }
 .who { font-size: 0.9rem; }
-@media (max-width: 560px) { .who { display: none; } }
+.profile-short { display: none; font-size: 0.9rem; }
+@media (max-width: 560px) {
+  .who { display: none; }
+  .profile-short { display: inline; }
+}
 </style>

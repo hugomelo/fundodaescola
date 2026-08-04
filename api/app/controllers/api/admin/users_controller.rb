@@ -82,7 +82,7 @@ module Api
 
       def user_json(user)
         {
-          id: user.id, email: user.email, name: user.name, role: user.role,
+          id: user.id, email: user.email, name: user.name, phone: user.phone, role: user.role,
           grade_id: user.grade_id,
           student_ids: user.student_ids,
           students: user.students.map { |s| { id: s.id, display_name: s.display_name, grade_id: s.grade_id } }
@@ -90,7 +90,7 @@ module Api
       end
 
       def user_params
-        params.require(:user).permit(:email, :name, :role, :grade_id)
+        params.require(:user).permit(:email, :name, :phone, :role, :grade_id)
       end
     end
   end

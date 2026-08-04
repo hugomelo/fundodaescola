@@ -21,4 +21,24 @@ class UserMailer < ApplicationMailer
       message_stream: "outbound"
     )
   end
+
+  def password_reset
+    @user = params.fetch(:user)
+    token = params.fetch(:token)
+    @reset_url = frontend_reset_url(token)
+    @expires_in = "2 horas"
+    mail(
+      to: @user.email,
+      subject: self.class.branded_subject("Redefinir senha"),
+      message_stream: "outbound"
+    )
+  end
+
+  private
+
+  def frontend_reset_url(token)
+    host = ENV.fetch("APP_HOST", "fundodaescola.com.br")
+    scheme = host.include?("localhost") ? "http" : "https"
+    "#{scheme}://#{host}/#/redefinir-senha?token=#{CGI.escape(token)}"
+  end
 end
