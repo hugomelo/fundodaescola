@@ -47,11 +47,21 @@ module Api
           }
         end
 
+        target_to_date = grade.target_to_date_cents(up_to: up_to)
+        pace = grade.pace_ratio(up_to: up_to)
+
         render json: {
-          grade: grade_json(grade, detailed: true).merge(students_count: students.size),
+          grade: grade_json(grade, detailed: true).merge(
+            students_count: students.size,
+            target_to_date_cents: target_to_date,
+            pace_ratio: pace&.round(4),
+            accumulation_start: grade.accumulation_start_month,
+            accumulation_end: grade.accumulation_end_month
+          ),
           students: students
         }
       end
+
 
       private
 
