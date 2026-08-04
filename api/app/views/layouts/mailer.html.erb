@@ -1,13 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundo da Escola</title>
   </head>
-
-  <body>
-    <%= yield %>
+  <body style="margin:0;padding:0;background:#f7f4ec;color:#2e2a24;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f4ec;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e6ded0;border-radius:12px;overflow:hidden;">
+            <tr>
+              <td style="padding:20px 24px;background:#6a7f3f;color:#ffffff;font-size:18px;font-weight:700;">
+                Fundo da Escola
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px;font-size:15px;line-height:1.55;">
+                <%= yield %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 24px;border-top:1px solid #e6ded0;color:#7a7266;font-size:12px;line-height:1.4;">
+                Este e-mail foi enviado automaticamente por Fundo da Escola.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

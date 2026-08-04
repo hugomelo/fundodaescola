@@ -32,6 +32,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
       CORS_ORIGINS: ${CORS_ORIGINS:-https://fundodaescola.com.br}
       API_DOMAIN: ${API_DOMAIN:-api.fundodaescola.com.br}
+      POSTMARK_API_TOKEN: ${POSTMARK_API_TOKEN:?set POSTMARK_API_TOKEN}
+      MAIL_FROM: ${MAIL_FROM:-Fundo da Escola <noreply@fundodaescola.com.br>}
+      APP_HOST: ${APP_HOST:-fundodaescola.com.br}
     # Run migrations on boot, then start Puma.
     command: >
       sh -c "bundle exec rails db:prepare && bundle exec puma -C config/puma.rb"

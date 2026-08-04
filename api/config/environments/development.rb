@@ -29,14 +29,23 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
-
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
-  # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  # Postmark when POSTMARK_API_TOKEN is set; otherwise write .eml files under tmp/mail.
+  if ENV["POSTMARK_API_TOKEN"].present?
+    config.action_mailer.delivery_method = :postmark
+    config.action_mailer.postmark_settings = { api_token: ENV["POSTMARK_API_TOKEN"] }
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.raise_delivery_errors = true
+  else
+    config.action_mailer.delivery_method = :file
+    config.action_mailer.file_settings = { location: Rails.root.join("tmp/mail") }
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.raise_delivery_errors = false
+  end
+
+  config.action_mailer.default_url_options = { host: "localhost", port: 5173 }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
