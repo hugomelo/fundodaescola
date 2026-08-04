@@ -29,11 +29,11 @@ module Api
       end
 
       # GET /api/admin/grades/:id/dashboard
-      # Full per-student balances (admin-only) + grade totals.
+      # Full per-student balances (admin-only) + grade totals. Active students only.
       def dashboard
         grade = find_grade!
         up_to = Date.current.beginning_of_month
-        students = grade.students.order(:full_name).map do |s|
+        students = grade.students.active.order(:full_name).map do |s|
           {
             id: s.id,
             full_name: s.full_name,
@@ -48,7 +48,7 @@ module Api
         end
 
         render json: {
-          grade: grade_json(grade, detailed: true),
+          grade: grade_json(grade, detailed: true).merge(students_count: students.size),
           students: students
         }
       end
