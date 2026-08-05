@@ -6,8 +6,12 @@ import { brl, monthLabel } from "../../utils/format";
 const props = defineProps({ id: { type: [Number, String], required: true } });
 const student = ref(null);
 const newPledge = ref({ month: "", amount: "" });
+const nameForm = ref({ full_name: "", display_name: "" });
 const enrollment = ref({ from: "", until: "" });
+const savingName = ref(false);
 const savingEnrollment = ref(false);
+const nameError = ref("");
+const nameSaved = ref(false);
 
 function toMonthInput(value) {
   return value ? String(value).slice(0, 7) : "";
@@ -16,12 +20,36 @@ function toMonthInput(value) {
 async function load() {
   const { data } = await client.get(`/admin/students/${props.id}`);
   student.value = data.student;
+  nameForm.value = {
+    full_name: data.student.full_name || "",
+    display_name: data.student.display_name || "",
+  };
   enrollment.value = {
     from: toMonthInput(data.student.enrolled_from),
     until: toMonthInput(data.student.enrolled_until),
   };
 }
 watch(() => props.id, load, { immediate: true });
+
+async function saveName() {
+  savingName.value = true;
+  nameError.value = "";
+  nameSaved.value = false;
+  try {
+    await client.patch(`/admin/students/${props.id}`, {
+      student: {
+        full_name: nameForm.value.full_name.trim(),
+        display_name: nameForm.value.display_name.trim() || null,
+      },
+    });
+    await load();
+    nameSaved.value = true;
+  } catch (e) {
+    nameError.value = e.response?.data?.details?.join(", ") || "Não foi possível salvar o nome.";
+  } finally {
+    savingName.value = false;
+  }
+}
 
 async function saveEnrollment() {
   savingEnrollment.value = true;
@@ -76,6 +104,21 @@ const pledges = computed(() => student.value?.pledges || []);
         <span class="value" :class="student.balance_cents >= 0 ? 'positive' : 'negative'">{{ brl(student.balance_cents) }}</span>
         <span class="label">Saldo</span>
       </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <h3>Nome</h3>
+      <form class="new-form" @submit.prevent="saveName">
+        <label>Nome completo
+          <input v-model="nameForm.full_name" required style="min-width:220px" />
+        </label>
+        <label>Nome de exibição
+          <input v-model="nameForm.display_name" placeholder="Opcional (ex.: primeiro nome)" style="min-width:160px" />
+        </label>
+        <button type="submit" :disabled="savingName">{{ savingName ? "Salvando…" : "Salvar nome" }}</button>
+        <span v-if="nameSaved" class="badge green">Salvo</span>
+        <span v-if="nameError" class="negative">{{ nameError }}</span>
+      </form>
     </div>
 
     <div class="card" style="margin-top:1.5rem">
