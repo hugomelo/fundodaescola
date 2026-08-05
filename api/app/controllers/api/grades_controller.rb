@@ -6,6 +6,10 @@ module Api
       grade = Grade.find(params[:id])
       authorize!(current_user.accessible_grade_ids.include?(grade.id))
 
+      target_to_date = grade.target_to_date_cents
+      pace = grade.pace_ratio
+      pace_gap = grade.pace_gap_cents
+
       render json: {
         grade: {
           id: grade.id,
@@ -14,6 +18,9 @@ module Api
           currency: grade.currency
         },
         target_total_cents: grade.target_total_cents,
+        target_to_date_cents: target_to_date,
+        pace_ratio: pace&.round(4),
+        pace_gap_cents: pace_gap,
         net_raised_cents: grade.net_raised_cents,
         student_contributions_cents: grade.student_contributions_cents,
         event_cents: grade.event_cents,

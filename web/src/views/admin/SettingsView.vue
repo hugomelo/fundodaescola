@@ -97,12 +97,15 @@ async function createGrade() {
         <label>Meta / custo total (R$)
           <input v-model="form.target" placeholder="ex: 80000,00" />
         </label>
-        <label>Início do ano letivo
+        <label>Começo das contribuições
           <input v-model="form.school_year_start" type="date" />
         </label>
-        <label>Fim do ano letivo
+        <label>Fim das contribuições
           <input v-model="form.school_year_end" type="date" />
         </label>
+        <p class="muted full" style="margin:0">
+          Estas datas definem a janela de acumulação linear da meta da turma (meta até este mês).
+        </p>
         <label class="full">Descrição
           <input v-model="form.description" placeholder="Fundo de viagens pedagógicas..." />
         </label>
@@ -158,6 +161,7 @@ async function createGrade() {
 <style scoped>
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1rem; }
 .form-grid label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; color: var(--muted); }
-.form-grid label.full { grid-column: 1 / -1; }
+.form-grid label.full,
+.form-grid .full { grid-column: 1 / -1; }
 @media (max-width: 620px) { .form-grid { grid-template-columns: 1fr; } }
 </style>

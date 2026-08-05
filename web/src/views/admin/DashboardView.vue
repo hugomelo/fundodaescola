@@ -57,6 +57,9 @@ const monthlyFamilies = computed(() => data.value?.monthly_contributing_families
         <div class="stat"><span class="value">{{ brl(g.target_total_cents) }}</span><span class="label">Meta total</span></div>
         <div class="stat"><span class="value">{{ g.students_count }}</span><span class="label">Alunos</span></div>
       </div>
+      <p v-if="g.pace_gap_cents > 0" class="pace-gap negative">
+        Faltam {{ brl(g.pace_gap_cents) }} para o ritmo necessário até este mês.
+      </p>
       <div class="row breakdown">
         <span>Contribuições: <strong>{{ brl(g.student_contributions_cents) }}</strong></span>
         <span>Eventos: <strong>{{ brl(g.event_cents) }}</strong></span>
@@ -125,6 +128,7 @@ const monthlyFamilies = computed(() => data.value?.monthly_contributing_families
 <style scoped>
 .breakdown { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
 .breakdown span { margin-right: 0.5rem; }
+.pace-gap { margin: 1rem 0 0; font-size: 0.95rem; }
 .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 900px) {
   .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }

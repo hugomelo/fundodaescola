@@ -34,9 +34,8 @@ class Grade < ApplicationRecord
     net_raised_cents.to_f / target_total_cents
   end
 
-  # Linear share of the total target for months elapsed from the accumulation
-  # start through `up_to` (inclusive). Uses school_year_start/end when set;
-  # otherwise falls back to earliest enrollment → last trip year.
+  # Linear share of the total target for months elapsed from the contribution
+  # window start through `up_to` (inclusive). Requires school_year_start/end.
   def target_to_date_cents(up_to: Date.current.beginning_of_month)
     start_m = accumulation_start_month
     end_m = accumulation_end_month
@@ -61,19 +60,22 @@ class Grade < ApplicationRecord
     net_raised_cents.to_f / expected
   end
 
-  def accumulation_start_month
-    (
-      school_year_start ||
-      students.where.not(enrolled_from: nil).minimum(:enrolled_from) ||
-      MonthlyPledge.joins(:student).where(students: { grade_id: id }).minimum(:month)
-    )&.to_date&.beginning_of_month
+  # How much is missing vs. the needed pace (0 when on/ahead).
+  def pace_gap_cents(up_to: Date.current.beginning_of_month)
+    expected = target_to_date_cents(up_to: up_to)
+    return nil if expected.nil?
+
+    [expected - net_raised_cents, 0].max
   end
 
-  def accumulation_end_month
-    return school_year_end.to_date.beginning_of_month if school_year_end.present?
+  # Contribution window start (Começo das contribuições).
+  def accumulation_start_month
+    school_year_start&.to_date&.beginning_of_month
+  end
 
-    last_year = trips.maximum(:trip_year)
-    Date.new(last_year, 12, 1) if last_year
+  # Contribution window end (Fim das contribuições).
+  def accumulation_end_month
+    school_year_end&.to_date&.beginning_of_month
   end
 
   def active_students_count
