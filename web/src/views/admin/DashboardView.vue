@@ -3,6 +3,7 @@ import { ref, watch, computed } from "vue";
 import client from "../../api/client";
 import { useAdminStore } from "../../stores/admin";
 import { brl, percent } from "../../utils/format";
+import MonthlyBarChart from "../../components/MonthlyBarChart.vue";
 
 const admin = useAdminStore();
 const data = ref(null);
@@ -22,6 +23,8 @@ const students = computed(() => {
   });
 });
 const g = computed(() => data.value?.grade);
+const monthlyReceived = computed(() => data.value?.monthly_received || []);
+const monthlyFamilies = computed(() => data.value?.monthly_contributing_families || []);
 </script>
 
 <template>
@@ -59,6 +62,32 @@ const g = computed(() => data.value?.grade);
         <span>Eventos: <strong>{{ brl(g.event_cents) }}</strong></span>
         <span>Rendimentos: <strong>{{ brl(g.investment_cents) }}</strong></span>
       </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem">
+      <div class="title-row">
+        <h2>Arrecadação mensal</h2>
+      </div>
+      <MonthlyBarChart
+        :series="monthlyReceived"
+        value-key="amount_cents"
+        value-kind="money"
+        empty-text="Ainda não há arrecadação mensal para exibir."
+        aria-label="Arrecadação mensal"
+      />
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem">
+      <div class="title-row">
+        <h2>Famílias que contribuíram</h2>
+      </div>
+      <MonthlyBarChart
+        :series="monthlyFamilies"
+        value-key="families"
+        value-kind="count"
+        empty-text="Ainda não há contribuições de famílias para exibir."
+        aria-label="Famílias que contribuíram por mês"
+      />
     </div>
 
     <div class="card" style="margin-top: 1.5rem">

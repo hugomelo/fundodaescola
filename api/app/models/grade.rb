@@ -80,9 +80,85 @@ class Grade < ApplicationRecord
     students.active.count
   end
 
+  # Net amount received per calendar month (payments + investment yield),
+  # from the earliest transaction through `up_to` (inclusive), with zero-filled gaps.
+  def monthly_received(up_to: Date.current.beginning_of_month)
+    by_month = Hash.new(0)
+
+    payments.pluck(:paid_on, :amount_cents).each do |paid_on, cents|
+      by_month[paid_on.to_date.beginning_of_month] += cents
+    end
+    investment_entries.pluck(:month, :amount_cents).each do |month, cents|
+      by_month[month.to_date.beginning_of_month] += cents
+    end
+
+    fill_monthly_series(by_month, up_to: up_to) { |month, total| { month: month.iso8601, amount_cents: total } }
+  end
+
+  # Distinct families (students) with a positive student_contribution payment each month.
+  # Uses the same month span as monthly_received so the charts stay aligned.
+  def monthly_contributing_families(up_to: Date.current.beginning_of_month)
+    by_month = Hash.new { |h, k| h[k] = Set.new }
+
+    payments.student_contribution
+            .where.not(student_id: nil)
+            .where("amount_cents > 0")
+            .pluck(:paid_on, :student_id)
+            .each do |paid_on, student_id|
+      by_month[paid_on.to_date.beginning_of_month] << student_id
+    end
+
+    counts = by_month.transform_values(&:size)
+    # Prefer the shared fund timeline (incl. investments/events) when available.
+    start_m, end_m = monthly_series_bounds(up_to: up_to)
+    if start_m.nil?
+      return [] if counts.empty?
+
+      start_m = counts.keys.min
+      end_m = up_to.to_date.beginning_of_month
+      end_m = start_m if end_m < start_m
+    end
+
+    result = []
+    month = start_m
+    while month <= end_m
+      result << { month: month.iso8601, families: counts[month] || 0 }
+      month = month.next_month
+    end
+    result
+  end
+
   private
+
+  def monthly_series_bounds(up_to:)
+    earliest = [
+      payments.minimum(:paid_on)&.to_date,
+      investment_entries.minimum(:month)&.to_date
+    ].compact.min
+    return [nil, nil] unless earliest
+
+    start_m = earliest.beginning_of_month
+    end_m = up_to.to_date.beginning_of_month
+    end_m = start_m if end_m < start_m
+    [start_m, end_m]
+  end
+
+  def fill_monthly_series(by_month, up_to:)
+    start_m, end_m = monthly_series_bounds(up_to: up_to)
+    return [] unless start_m
+
+    result = []
+    month = start_m
+    while month <= end_m
+      result << yield(month, by_month[month] || 0)
+      month = month.next_month
+    end
+    result
+  end
 
   def months_inclusive(from_month, to_month)
     ((to_month.year * 12 + to_month.month) - (from_month.year * 12 + from_month.month)) + 1
   end
 end
+
+

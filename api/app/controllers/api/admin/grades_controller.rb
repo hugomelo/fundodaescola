@@ -58,9 +58,12 @@ module Api
             accumulation_start: grade.accumulation_start_month,
             accumulation_end: grade.accumulation_end_month
           ),
-          students: students
+          students: students,
+          monthly_received: grade.monthly_received(up_to: up_to),
+          monthly_contributing_families: grade.monthly_contributing_families(up_to: up_to)
         }
       end
+
 
 
       private
