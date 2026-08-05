@@ -38,7 +38,44 @@ module Api
         head :no_content
       end
 
+      # POST /api/admin/users/import
+      # Multipart: file (CSV), grade_id, send_invite (optional boolean).
+      # CSV columns: name, email, telefone?, aluno
+      def import
+        grade = find_import_grade!
+        return if performed?
+
+        content = import_content
+        return render json: { error: "no_csv_provided" }, status: :bad_request if content.blank?
+
+        result = UsersImporter.run(
+          grade: grade,
+          csv_content: content,
+          send_invite: ActiveModel::Type::Boolean.new.cast(params[:send_invite])
+        )
+        render json: { result: result.to_h }
+      end
+
       private
+
+      def find_import_grade!
+        grade_id = params[:grade_id].presence
+        grade_id ||= current_user.grade_id if current_user.grade_admin?
+        if grade_id.blank?
+          render json: { error: "grade_required" }, status: :bad_request
+          return nil
+        end
+
+        authorize_grade!(Grade.find(grade_id))
+      end
+
+      def import_content
+        if params[:file].respond_to?(:read)
+          params[:file].read
+        else
+          params[:csv]
+        end
+      end
 
       def scoped_users
         return User.all if current_user.super_admin?

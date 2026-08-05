@@ -1,0 +1,18 @@
+Olá<%= @user.name.present? ? ", #{@user.name}" : "" %>,
+
+Você foi convidado(a) a usar o Fundo da Escola, a plataforma onde as famílias
+acompanham o fundo de viagem da turma<%= @grade_name.present? ? " #{@grade_name}" : "" %>.
+
+Por lá você vê o progresso coletivo do fundo (sem identificar contribuições
+individuais de outras famílias) e, na área do seu filho(a), quanto já foi
+contribuído em relação ao combinado.
+
+<% if @students.any? -%>
+Conta vinculada a: <%= @students.map { |s| s.display_name.presence || s.full_name }.join(", ") %>.
+
+<% end -%>
+Para começar, defina sua senha de acesso:
+<%= @set_password_url %>
+
+Este link expira em <%= @expires_in %>. Se expirar, use "Esqueci minha senha"
+na tela de login com este e-mail.

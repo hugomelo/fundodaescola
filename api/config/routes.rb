@@ -43,7 +43,10 @@ Rails.application.routes.draw do
         resources :cost_entries, only: [:create], controller: "trip_cost_entries"
       end
       resources :trip_cost_entries, only: [:update, :destroy]
-      resources :users
+      resources :users do
+        collection { post :import }
+      end
     end
   end
 end
+

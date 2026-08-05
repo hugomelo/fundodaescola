@@ -22,6 +22,22 @@ class UserMailer < ApplicationMailer
     )
   end
 
+  # Sent after bulk import when "enviar convite" is checked.
+  # Includes a set-password link and a short explanation of the platform.
+  def invite
+    @user = params.fetch(:user)
+    token = params.fetch(:token)
+    @set_password_url = frontend_reset_url(token)
+    @expires_in = "2 horas"
+    @students = @user.students.includes(:grade).to_a
+    @grade_name = @students.map { |s| s.grade&.name }.compact.uniq.first
+    mail(
+      to: @user.email,
+      subject: self.class.branded_subject("Convite para acompanhar o fundo da turma"),
+      message_stream: "outbound"
+    )
+  end
+
   def password_reset
     @user = params.fetch(:user)
     token = params.fetch(:token)
@@ -42,3 +58,4 @@ class UserMailer < ApplicationMailer
     "#{scheme}://#{host}/#/redefinir-senha?token=#{CGI.escape(token)}"
   end
 end
+

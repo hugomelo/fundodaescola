@@ -10,6 +10,10 @@ const users = ref([]);
 const students = ref([]);
 const showForm = ref(false);
 const form = ref({ email: "", name: "", role: "parent", grade_id: "", password: "", student_ids: [] });
+const importing = ref(false);
+const importResult = ref(null);
+const sendInvite = ref(true);
+const fileInput = ref(null);
 
 async function loadStudents() {
   const { data } = await client.get(`/admin/grades/${admin.currentGradeId}/students`);
@@ -57,14 +61,57 @@ async function remove(u) {
 function gradeName(id) {
   return admin.grades.find((g) => g.id === id)?.name || "—";
 }
+
+async function onFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  importing.value = true;
+  importResult.value = null;
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("grade_id", admin.currentGradeId);
+    formData.append("send_invite", sendInvite.value ? "true" : "false");
+    const { data } = await client.post(`/admin/users/import`, formData);
+    importResult.value = data.result;
+    await load();
+  } finally {
+    importing.value = false;
+    if (fileInput.value) fileInput.value.value = "";
+  }
+}
 </script>
 
 <template>
   <div class="card">
     <div class="title-row">
       <h2>Usuários <span class="muted" style="font-weight:400">({{ users.length }})</span></h2>
-      <button @click="showForm = !showForm">{{ showForm ? "Cancelar" : "Novo usuário" }}</button>
+      <div class="actions-row">
+        <label class="invite-check">
+          <input v-model="sendInvite" type="checkbox" />
+          Enviar e-mail de convite aos novos usuários
+        </label>
+        <label class="import-btn">
+          {{ importing ? "Importando..." : "Importar CSV" }}
+          <input ref="fileInput" type="file" accept=".csv,text/csv" hidden @change="onFile" :disabled="importing" />
+        </label>
+        <button @click="showForm = !showForm">{{ showForm ? "Cancelar" : "Novo usuário" }}</button>
+      </div>
     </div>
+
+    <p class="muted import-hint">
+      CSV com colunas <code>name</code>, <code>email</code>, <code>telefone</code> (opcional) e
+      <code>aluno</code> (nome do estudante na turma selecionada).
+    </p>
+
+    <p v-if="importResult" class="import-result badge green">
+      Importado: {{ importResult.created }} novo(s), {{ importResult.updated }} atualizado(s),
+      {{ importResult.skipped }} ignorado(s)
+      <span v-if="importResult.invited"> — {{ importResult.invited }} convite(s) enviado(s)</span>.
+    </p>
+    <ul v-if="importResult?.errors?.length" class="import-errors">
+      <li v-for="(err, i) in importResult.errors" :key="i">{{ err }}</li>
+    </ul>
 
     <form v-if="showForm" class="new-form" @submit.prevent="create">
       <input v-model="form.email" type="email" placeholder="E-mail" required />
@@ -122,4 +169,16 @@ function gradeName(id) {
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .students-pick { display: flex; flex-direction: column; font-size: 0.8rem; }
+.actions-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.invite-check { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted, #7a7266); cursor: pointer; }
+.import-btn { background: var(--primary); color: #fff; padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer; }
+.import-btn:hover { background: var(--primary-dark); }
+.import-hint { margin: 0.4rem 0 0.8rem; font-size: 0.85rem; }
+.import-hint code { font-size: 0.8rem; background: #f0ebe3; padding: 0.1rem 0.35rem; border-radius: 4px; }
+.import-result { display: block; margin-bottom: 0.6rem; }
+.import-errors {
+  margin: 0 0 1rem; padding: 0.7rem 1rem; background: #fbeee8; border-radius: 8px;
+  color: var(--negative, #a94442); font-size: 0.85rem; list-style: disc inside;
+  max-height: 10rem; overflow: auto;
+}
 </style>
