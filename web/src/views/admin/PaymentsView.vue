@@ -47,6 +47,13 @@ async function remap(p, value) {
   await load();
 }
 
+async function updateAmount(p, value) {
+  const cents = Math.round(parseFloat(String(value).replace(",", ".")) * 100);
+  if (Number.isNaN(cents) || cents === p.amount_cents) return;
+  await client.patch(`/admin/payments/${p.id}`, { payment: { amount_cents: cents } });
+  await load();
+}
+
 // Confirm the current classification is correct (clears the review flag).
 async function confirmPayment(p) {
   await client.patch(`/admin/payments/${p.id}`, { payment: { needs_review: false } });
@@ -123,7 +130,14 @@ async function onFile(e) {
             <span v-if="p.needs_review" title="Precisa de revisão">⚠️</span>
             {{ p.description }}
           </td>
-          <td class="right" :class="p.amount_cents < 0 ? 'negative' : ''">{{ brl(p.amount_cents) }}</td>
+          <td class="right">
+            <input
+              class="amount-input"
+              :class="{ negative: p.amount_cents < 0 }"
+              :value="(p.amount_cents / 100).toFixed(2)"
+              @change="updateAmount(p, $event.target.value)"
+            />
+          </td>
           <td>
             <select
               :value="p.kind === 'event' ? 'event' : (p.student_id || '')"
@@ -161,4 +175,10 @@ select.warn { border-color: var(--negative); background: #fbeee8; }
 tr.flagged { background: #fdf6ea; }
 .actions { display: flex; gap: 0.3rem; justify-content: flex-end; }
 .confirm { color: var(--positive); border-color: var(--positive); padding: 0.35rem 0.6rem; }
+.amount-input {
+  width: 110px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.amount-input.negative { color: var(--negative); }
 </style>
