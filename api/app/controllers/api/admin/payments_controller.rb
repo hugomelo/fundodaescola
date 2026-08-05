@@ -12,10 +12,16 @@ module Api
         scope = scope.where(needs_review: true) if params[:review].present?
         scope = scope.where("description ILIKE ?", "%#{params[:q]}%") if params[:q].present?
 
-        limit = [params.fetch(:limit, 100).to_i, 500].min
+        limit = [[params.fetch(:limit, 50).to_i, 1].max, 200].min
+        page = [params.fetch(:page, 1).to_i, 1].max
+        total = scope.count
+        payments = scope.limit(limit).offset((page - 1) * limit).map { |p| PaymentSerializer.call(p) }
+
         render json: {
-          payments: scope.limit(limit).map { |p| PaymentSerializer.call(p) },
-          total: scope.count,
+          payments: payments,
+          total: total,
+          page: page,
+          limit: limit,
           review_count: grade.payments.where(needs_review: true).count
         }
       end
