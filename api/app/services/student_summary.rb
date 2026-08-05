@@ -29,7 +29,9 @@ class StudentSummary
         expected_cents: @student.expected_cents(up_to: @up_to),
         balance_cents: @student.balance_cents(up_to: @up_to),
         currency: @student.grade.currency
-      }
+      },
+      # Latest payment date known for the grade (bank extract coverage).
+      bank_updated_through: @student.grade.payments.maximum(:paid_on)
     }
   end
 

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import client from "../api/client";
-import { brl, monthLabel } from "../utils/format";
+import { brl, monthLabel, dateLabel } from "../utils/format";
 import GradeOverview from "../components/GradeOverview.vue";
 
 const props = defineProps({ id: { type: [Number, String], required: true } });
@@ -30,6 +30,7 @@ const ahead = computed(() => balance.value >= 0);
 
 // per-month running balance for context
 const rows = computed(() => summary.value?.months || []);
+const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
 </script>
 
 <template>
@@ -65,7 +66,12 @@ const rows = computed(() => summary.value?.months || []);
       </div>
 
       <div class="card" style="margin-top: 1.5rem">
-        <h2>Mês a mês</h2>
+        <div class="title-row">
+          <h2>Mês a mês</h2>
+          <p v-if="bankUpdatedThrough" class="muted bank-disclaimer">
+            Extrato bancário atualizado até {{ dateLabel(bankUpdatedThrough) }}
+          </p>
+        </div>
         <table>
           <thead>
             <tr><th>Mês</th><th class="right">Prometido</th><th class="right">Contribuído</th><th></th></tr>
@@ -103,4 +109,12 @@ const rows = computed(() => summary.value?.months || []);
 <style scoped>
 .back { display: inline-block; margin-bottom: 0.8rem; }
 .note { margin-top: 1rem; font-size: 0.85rem; }
+.bank-disclaimer {
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: right;
+}
+@media (max-width: 560px) {
+  .bank-disclaimer { text-align: left; }
+}
 </style>
