@@ -74,13 +74,39 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
         </div>
         <table>
           <thead>
-            <tr><th>Mês</th><th class="right">Prometido</th><th class="right">Contribuído</th><th></th></tr>
+            <tr>
+              <th>Mês</th>
+              <th class="right">Prometido</th>
+              <th class="right">Contribuído</th>
+              <th>Contribuinte</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
             <tr v-for="r in rows" :key="r.month">
               <td>{{ monthLabel(r.month) }}</td>
               <td class="right">{{ r.pledged_cents != null ? brl(r.pledged_cents, totals.currency) : "—" }}</td>
               <td class="right">{{ brl(r.contributed_cents, totals.currency) }}</td>
+              <td class="contributors">
+                <template v-if="r.payments?.length">
+                  <div
+                    v-for="p in r.payments"
+                    :key="p.id"
+                    class="contributor"
+                    :class="{ refund: p.amount_cents < 0 }"
+                  >
+                    <span class="payer">{{ p.description }}</span>
+                    <span class="meta">
+                      <span class="muted">{{ dateLabel(p.paid_on) }}</span>
+                      <span class="amount" :class="{ negative: p.amount_cents < 0 }">
+                        {{ brl(p.amount_cents, totals.currency) }}
+                        <template v-if="p.amount_cents < 0"> (estorno)</template>
+                      </span>
+                    </span>
+                  </div>
+                </template>
+                <span v-else class="muted">—</span>
+              </td>
               <td>
                 <span
                   v-if="r.pledged_cents != null"
@@ -94,7 +120,7 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
           </tbody>
         </table>
         <p class="muted note">
-          O valor contribuído é apurado a partir dos pagamentos identificados na conta.
+          O valor contribuído é o total líquido dos pagamentos daquele mês (créditos menos estornos).
           Pagamentos adiantados aparecem no mês em que caíram na conta, mas o saldo considera o total acumulado.
         </p>
       </div>
@@ -114,6 +140,21 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
   font-size: 0.85rem;
   text-align: right;
 }
+.contributors { font-size: 0.9rem; }
+.contributor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.contributor + .contributor { margin-top: 0.45rem; }
+.contributor .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+.contributor .amount { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.contributor.refund .payer { color: var(--muted); }
 @media (max-width: 560px) {
   .bank-disclaimer { text-align: left; }
 }

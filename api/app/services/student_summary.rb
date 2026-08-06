@@ -44,17 +44,19 @@ class StudentSummary
   def month_rows
     months.map do |m|
       eff = @student.effective_pledge(m, pledge_entries) # [amount, status] or nil
+      payments = payments_by_month[m] || []
       {
         month: m,
         pledged_cents: eff&.first,
-        contributed_cents: contributed_by_month[m] || 0,
-        status: eff&.last
+        contributed_cents: payments.sum { |p| p[:amount_cents] },
+        status: eff&.last,
+        payments: payments
       }
     end
   end
 
   def months
-    starts = [pledge_entries.first&.month, contributed_by_month.keys.min, @student.enrolled_from]
+    starts = [pledge_entries.first&.month, payments_by_month.keys.min, @student.enrolled_from]
              .compact.map { |d| d.to_date.beginning_of_month }
     return [] if starts.empty?
 
@@ -74,10 +76,23 @@ class StudentSummary
     result
   end
 
-  def contributed_by_month
-    @contributed_by_month ||= @student.payments
-      .where(kind: :student_contribution)
-      .group("date_trunc('month', paid_on)").sum(:amount_cents)
-      .transform_keys { |k| k.to_date.beginning_of_month }
+  def payments_by_month
+    @payments_by_month ||= begin
+      grouped = Hash.new { |h, k| h[k] = [] }
+      @student.payments
+              .where(kind: :student_contribution)
+              .order(:paid_on, :id)
+              .pluck(:id, :paid_on, :description, :amount_cents)
+              .each do |id, paid_on, description, amount_cents|
+        month = paid_on.to_date.beginning_of_month
+        grouped[month] << {
+          id: id,
+          paid_on: paid_on,
+          description: description,
+          amount_cents: amount_cents
+        }
+      end
+      grouped
+    end
   end
 end
