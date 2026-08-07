@@ -3,12 +3,20 @@ import { ref, watch, computed } from "vue";
 import client from "../api/client";
 import { brl, monthLabel, dateLabel } from "../utils/format";
 import GradeOverview from "../components/GradeOverview.vue";
+import TripFundAbout from "../components/TripFundAbout.vue";
 
 const props = defineProps({ id: { type: [Number, String], required: true } });
 
 const summary = ref(null);
 const error = ref("");
 const loading = ref(true);
+
+const sections = [
+  { id: "mes-a-mes", label: "Mês a mês" },
+  { id: "panorama", label: "Panorama" },
+  { id: "viagens", label: "As Viagens" },
+  { id: "poupanca", label: "A Poupança" },
+];
 
 async function load() {
   loading.value = true;
@@ -31,6 +39,11 @@ const ahead = computed(() => balance.value >= 0);
 // per-month running balance for context
 const rows = computed(() => summary.value?.months || []);
 const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
+
+function goToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 </script>
 
 <template>
@@ -48,7 +61,19 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
         </span>
       </div>
 
-      <div class="grid cols-3">
+      <nav class="page-nav" aria-label="Seções da página">
+        <button
+          v-for="s in sections"
+          :key="s.id"
+          type="button"
+          class="nav-link"
+          @click="goToSection(s.id)"
+        >
+          {{ s.label }}
+        </button>
+      </nav>
+
+      <div id="resumo" class="grid cols-3 section-anchor">
         <div class="card stat">
           <span class="value">{{ brl(totals.contributed_cents, totals.currency) }}</span>
           <span class="label">Total contribuído</span>
@@ -65,7 +90,7 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
         </div>
       </div>
 
-      <div class="card" style="margin-top: 1.5rem">
+      <div id="mes-a-mes" class="card section-anchor" style="margin-top: 1.5rem">
         <div class="title-row">
           <h2>Mês a mês</h2>
           <p v-if="bankUpdatedThrough" class="muted bank-disclaimer">
@@ -125,8 +150,12 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
         </p>
       </div>
 
-      <div style="margin-top: 1.5rem">
+      <div id="panorama" class="section-anchor" style="margin-top: 1.5rem">
         <GradeOverview :grade-id="summary.student.grade_id" />
+      </div>
+
+      <div style="margin-top: 1.5rem">
+        <TripFundAbout />
       </div>
     </template>
   </div>
@@ -139,6 +168,41 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
   margin: 0;
   font-size: 0.85rem;
   text-align: right;
+}
+.section-anchor { scroll-margin-top: 4.5rem; }
+.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0.75rem;
+  z-index: 5;
+}
+.nav-link {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-radius: 7px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+.nav-link:hover {
+  background: #f0ebe0;
+  color: var(--ink);
+}
+.nav-link:focus {
+  outline: none;
+}
+.nav-link:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
 }
 .contributors { font-size: 0.9rem; }
 .contributor {
@@ -157,5 +221,7 @@ const bankUpdatedThrough = computed(() => summary.value?.bank_updated_through);
 .contributor.refund .payer { color: var(--muted); }
 @media (max-width: 560px) {
   .bank-disclaimer { text-align: left; }
+  .page-nav { top: 0.4rem; }
+  .nav-link { padding: 0.4rem 0.55rem; font-size: 0.82rem; }
 }
 </style>
