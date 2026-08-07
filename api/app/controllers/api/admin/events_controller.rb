@@ -30,10 +30,21 @@ module Api
 
       private
 
-      # Retroactively flag existing payments that fall on this event's dates.
+      # Retroactively flag existing payments on this event's dates, except
+      # contribution-sized transfers (≥ the student's pledge) which are left alone.
       def flag_payments_on(grade, event)
         range = event.ends_on ? (event.starts_on..event.ends_on) : (event.starts_on..event.starts_on)
-        grade.payments.where(paid_on: range).update_all(needs_review: true)
+        flagged = 0
+        grade.payments.where(paid_on: range).includes(student: :monthly_pledges).find_each do |payment|
+          student = payment.student
+          pledge = student&.effective_pledge(payment.paid_on)&.first
+          next if student && payment.amount_cents.positive? && pledge&.positive? &&
+                  payment.amount_cents >= pledge && payment.student_contribution?
+
+          payment.update!(needs_review: true)
+          flagged += 1
+        end
+        flagged
       end
 
       def find_event!

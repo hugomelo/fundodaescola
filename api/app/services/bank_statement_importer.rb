@@ -111,15 +111,18 @@ class BankStatementImporter
     end
 
     student, kind, mapping = resolve(desc, mapeamento)
+    on_event_day = @events.any? { |e| e.covers?(date) }
+    student, kind = classify_by_pledge(student, kind, cents, date, on_event_day)
+
     unmapped = kind == :student_contribution && student.nil?
     @result.unmapped += 1 if unmapped
 
     # Flag for manual review when the tool cannot be confident:
-    #   * the payment fell on a registered event day (could be a contribution
-    #     OR a purchase at the event, e.g. a slice of cake), or
-    #   * the payer could not be identified.
-    on_event_day = @events.any? { |e| e.covers?(date) }
-    flag = unmapped || on_event_day
+    #   * classified as an event (mapping or event-day purchase heuristic),
+    #   * event-day payment that was not confidently a contribution-sized transfer,
+    #   * or the payer could not be identified.
+    confident_contribution = contribution_meets_pledge?(student, cents, date)
+    flag = unmapped || kind == :event || (on_event_day && !confident_contribution)
 
     external_ref = Digest::MD5.hexdigest([raw_date, time, desc, cents].join("|"))
     payment = @grade.payments.find_or_initialize_by(external_ref: external_ref)
@@ -160,6 +163,38 @@ class BankStatementImporter
     return [nil, :event, mapping] if mapping.maps_to_event?
 
     [mapping.student, :student_contribution, mapping]
+  end
+
+  # On event days (or when already tagged as event), prefer contribution when the
+  # amount is at least the student's effective monthly pledge — those look like
+  # the regular fund transfer, not a cake/event purchase. Smaller amounts on an
+  # event day are treated as event income (and will be flagged for confirmation).
+  def classify_by_pledge(student, kind, cents, date, on_event_day)
+    return [student, kind] unless student && cents.positive?
+
+    pledge_cents = pledged_cents_for(student, date)
+    return [student, kind] unless pledge_cents&.positive?
+
+    if cents >= pledge_cents
+      [student, :student_contribution]
+    elsif on_event_day || kind == :event
+      [nil, :event]
+    else
+      [student, kind]
+    end
+  end
+
+  def contribution_meets_pledge?(student, cents, date)
+    return false unless student && cents.positive?
+
+    pledge_cents = pledged_cents_for(student, date)
+    pledge_cents&.positive? && cents >= pledge_cents
+  end
+
+  def pledged_cents_for(student, date)
+    @pledge_cache ||= {}
+    entries = (@pledge_cache[student.id] ||= student.monthly_pledges.order(:month).to_a)
+    student.effective_pledge(date, entries)&.first
   end
 
   # Strip the "Pix recebido de " style prefix and any trailing "(...)" note.

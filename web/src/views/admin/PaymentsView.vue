@@ -129,7 +129,7 @@ async function onFile(e) {
     </p>
 
     <div v-if="reviewCount > 0 && filter !== 'review'" class="review-banner">
-      ⚠️ {{ reviewCount }} pagamento(s) precisam de revisão (dias de evento ou pagador não identificado).
+      ⚠️ {{ reviewCount }} pagamento(s) precisam de revisão (evento, dia de evento ou pagador não identificado).
       <button class="secondary" @click="filter = 'review'">Revisar agora</button>
     </div>
 

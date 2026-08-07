@@ -38,9 +38,9 @@ async function remove(e) {
   <div class="card">
     <div class="title-row"><h2>Eventos</h2></div>
     <p class="muted">
-      Cadastre as datas dos eventos da turma. Pagamentos recebidos nesses dias são
-      marcados automaticamente para revisão — assim você decide, um a um, se foram
-      contribuições ao fundo ou compras no evento (ex.: um pedaço de bolo).
+      Cadastre as datas dos eventos da turma. Na importação do extrato, valores iguais
+      ou acima do valor prometido do aluno entram como contribuição; valores menores
+      nesses dias entram como evento e pedem confirmação (ex.: um pedaço de bolo).
     </p>
 
     <form class="new-form" @submit.prevent="create">
