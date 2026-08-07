@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  RESET_PASSWORD_EXPIRY = 2.hours
+  RESET_PASSWORD_EXPIRY = 24.hours
 
   has_secure_password
 

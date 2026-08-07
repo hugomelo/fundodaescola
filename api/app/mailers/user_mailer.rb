@@ -28,7 +28,7 @@ class UserMailer < ApplicationMailer
     @user = params.fetch(:user)
     token = params.fetch(:token)
     @set_password_url = frontend_reset_url(token)
-    @expires_in = "2 horas"
+    @expires_in = "24 horas"
     @students = @user.students.includes(:grade).to_a
     @grade_name = @students.map { |s| s.grade&.name }.compact.uniq.first
     mail(
@@ -42,7 +42,7 @@ class UserMailer < ApplicationMailer
     @user = params.fetch(:user)
     token = params.fetch(:token)
     @reset_url = frontend_reset_url(token)
-    @expires_in = "2 horas"
+    @expires_in = "24 horas"
     mail(
       to: @user.email,
       subject: self.class.branded_subject("Redefinir senha"),

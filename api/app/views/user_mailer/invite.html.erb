@@ -2,7 +2,8 @@
 
 <p>
   Você foi convidado(a) a usar o <strong>Fundo da Escola</strong>, a plataforma
-  onde as famílias acompanham o fundo de viagem da turma<%= @grade_name.present? ? " <strong>#{@grade_name}</strong>" : "" %>.
+  onde as famílias acompanham o fundo de viagem da turma<% if @grade_name.present? %>
+  <strong><%= @grade_name %></strong><% end %>.
 </p>
 
 <p>
