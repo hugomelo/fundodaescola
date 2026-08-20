@@ -19,6 +19,7 @@ const routes = [
       { path: "pagamentos", name: "admin-payments", component: () => import("../views/admin/PaymentsView.vue") },
       { path: "eventos", name: "admin-events", component: () => import("../views/admin/EventsView.vue") },
       { path: "alunos", name: "admin-students", component: () => import("../views/admin/StudentsView.vue") },
+      { path: "alunos/:id/pagamentos", name: "admin-student-payments", component: () => import("../views/admin/StudentPaymentsView.vue"), props: true },
       { path: "alunos/:id", name: "admin-student", component: () => import("../views/admin/StudentPledgesView.vue"), props: true },
       { path: "mapeamentos", name: "admin-mappings", component: () => import("../views/admin/MappingsView.vue") },
       { path: "rendimentos", name: "admin-investments", component: () => import("../views/admin/InvestmentsView.vue") },

@@ -94,7 +94,13 @@ async function toggleActive(s) {
           >
             {{ pendingCents(s) != null ? brl(pendingCents(s)) : "—" }}
           </td>
-          <td class="right"><button class="ghost" @click="toggleActive(s)">{{ s.active ? "Desativar" : "Ativar" }}</button></td>
+          <td class="right actions">
+            <RouterLink
+              class="btn-link"
+              :to="{ name: 'admin-student-payments', params: { id: s.id } }"
+            >Pagamentos</RouterLink>
+            <button class="ghost" @click="toggleActive(s)">{{ s.active ? "Desativar" : "Ativar" }}</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -111,4 +117,15 @@ async function toggleActive(s) {
 .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .tabs .active { border-color: var(--amber); color: var(--ink); }
 .tabs .pill { background: var(--negative); color: #fff; border-radius: 999px; padding: 0 0.4rem; font-size: 0.75rem; margin-left: 0.3rem; }
+.actions { display: flex; gap: 0.3rem; justify-content: flex-end; align-items: center; white-space: nowrap; }
+.btn-link {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.btn-link:hover { text-decoration: none; background: #f0ebe0; }
 </style>
