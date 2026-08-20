@@ -7,6 +7,7 @@ import { brl, monthLabel } from "../../utils/format";
 const admin = useAdminStore();
 const students = ref([]);
 const onlyBehind = ref(false);
+const sortKey = ref("full_name");
 const activeCount = computed(() => students.value.filter((s) => s.active).length);
 const showForm = ref(false);
 const form = ref({ full_name: "", display_name: "", enrolled_from: "", enrolled_until: "" });
@@ -18,8 +19,13 @@ function pendingCents(s) {
 
 const behindCount = computed(() => students.value.filter((s) => pendingCents(s) > 0).length);
 const displayed = computed(() => {
-  if (!onlyBehind.value) return students.value;
-  return students.value.filter((s) => pendingCents(s) > 0);
+  let list = onlyBehind.value
+    ? students.value.filter((s) => pendingCents(s) > 0)
+    : students.value;
+  return [...list].sort((a, b) => {
+    if (sortKey.value === "atraso") return (pendingCents(b) || 0) - (pendingCents(a) || 0);
+    return a.full_name.localeCompare(b.full_name, "pt-BR");
+  });
 });
 
 async function load() {
@@ -63,6 +69,10 @@ async function toggleActive(s) {
           Em atraso <span v-if="behindCount" class="pill">{{ behindCount }}</span>
         </button>
       </div>
+      <select v-model="sortKey">
+        <option value="full_name">Ordenar por nome</option>
+        <option value="atraso">Ordenar por atraso</option>
+      </select>
     </div>
 
     <table>
@@ -113,7 +123,7 @@ async function toggleActive(s) {
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .new-form label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); }
-.filters { align-items: center; margin: 0 0 1rem; }
+.filters { align-items: center; justify-content: space-between; margin: 0 0 1rem; }
 .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .tabs .active { border-color: var(--amber); color: var(--ink); }
 .tabs .pill { background: var(--negative); color: #fff; border-radius: 999px; padding: 0 0.4rem; font-size: 0.75rem; margin-left: 0.3rem; }
