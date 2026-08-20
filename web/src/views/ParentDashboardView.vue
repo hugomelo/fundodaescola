@@ -105,7 +105,7 @@ function goToSection(id) {
       </div>
 
       <div style="margin-top: 1.5rem">
-        <TripFundAbout />
+        <TripFundAbout :grade-id="summary.student.grade_id" />
       </div>
     </template>
   </div>

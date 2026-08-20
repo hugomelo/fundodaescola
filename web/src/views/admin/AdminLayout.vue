@@ -8,7 +8,7 @@ const admin = useAdminStore();
 const auth = useAuthStore();
 const isSuper = computed(() => auth.isSuperAdmin);
 
-onMounted(() => { if (!admin.loaded) admin.loadGrades(); });
+onMounted(() => { admin.loadGrades(); });
 
 const links = [
   { to: { name: "admin-dashboard" }, label: "Painel" },
@@ -36,7 +36,7 @@ const links = [
       <RouterLink v-for="l in links" :key="l.label" :to="l.to" class="tab">{{ l.label }}</RouterLink>
     </nav>
 
-    <RouterView v-if="admin.currentGradeId" />
+    <RouterView v-if="admin.loaded && admin.currentGradeId" />
     <p v-else class="muted">Carregando turmas...</p>
   </div>
 </template>

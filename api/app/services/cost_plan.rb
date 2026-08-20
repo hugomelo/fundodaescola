@@ -7,6 +7,8 @@
 #
 #   total_per_student = Σ trip.projected_cost(trip_year)
 #   total_needed      = total_per_student × active students
+#   remaining         = max(total_needed − net raised, 0)
+#   suggested monthly = remaining ÷ remaining months ÷ active families
 class CostPlan
   def self.call(grade)
     new(grade).call
@@ -23,6 +25,11 @@ class CostPlan
     rows = trips.map { |t| trip_row(t) }
     total_per_student = rows.sum { |r| r[:cost_cents].to_i }
     students = @grade.active_students_count
+    total_needed = total_per_student * students
+    net_raised = @grade.net_raised_cents
+    remaining = [total_needed - net_raised, 0].max
+    months = @grade.remaining_months
+    suggested_monthly = suggested_monthly_cents(remaining, months, students)
 
     {
       currency: @grade.currency,
@@ -31,7 +38,12 @@ class CostPlan
       years: @years,
       trips: rows,
       total_per_student_cents: total_per_student,
-      total_needed_cents: total_per_student * students
+      total_needed_cents: total_needed,
+      net_raised_cents: net_raised,
+      remaining_cents: remaining,
+      remaining_months: months,
+      accumulation_end: @grade.accumulation_end_month,
+      suggested_monthly_cents: suggested_monthly
     }
   end
 
@@ -59,5 +71,12 @@ class CostPlan
     return [] if years.empty?
 
     (years.min..years.max).to_a
+  end
+
+  # Remaining fund need, split equally across active families and remaining months.
+  def suggested_monthly_cents(remaining, months, families)
+    return nil unless months&.positive? && families.positive?
+
+    (remaining.to_d / months / families).round
   end
 end

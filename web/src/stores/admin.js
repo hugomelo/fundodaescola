@@ -14,12 +14,24 @@ export const useAdminStore = defineStore("admin", {
     async loadGrades() {
       const { data } = await client.get("/admin/grades");
       this.grades = data.grades;
-      if (!this.currentGradeId && this.grades.length) this.setGrade(this.grades[0].id);
+      const ids = this.grades.map((g) => g.id);
+      if (!this.currentGradeId || !ids.includes(this.currentGradeId)) {
+        if (this.grades.length) this.setGrade(this.grades[0].id);
+        else this.clearGrade();
+      }
       this.loaded = true;
     },
     setGrade(id) {
       this.currentGradeId = Number(id);
       localStorage.setItem("cc_admin_grade", String(id));
+    },
+    clearGrade() {
+      this.currentGradeId = null;
+      localStorage.removeItem("cc_admin_grade");
+    },
+    reset() {
+      this.grades = [];
+      this.loaded = false;
     },
   },
 });

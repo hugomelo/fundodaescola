@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import client from "../api/client";
+import { useAdminStore } from "./admin";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -20,6 +21,7 @@ export const useAuthStore = defineStore("auth", {
       this.token = data.token;
       this.user = data.user;
       localStorage.setItem("cc_token", data.token);
+      useAdminStore().reset();
       return data.user;
     },
     async fetchMe() {
@@ -42,6 +44,7 @@ export const useAuthStore = defineStore("auth", {
       this.token = null;
       this.user = null;
       localStorage.removeItem("cc_token");
+      useAdminStore().reset();
     },
   },
 });

@@ -78,6 +78,18 @@ class Grade < ApplicationRecord
     school_year_end&.to_date&.beginning_of_month
   end
 
+  # Months left in the contribution window, including the current month.
+  # nil when the end date is not set.
+  def remaining_months(from: Date.current.beginning_of_month)
+    end_m = accumulation_end_month
+    return nil unless end_m
+
+    from = from.to_date.beginning_of_month
+    return 0 if from > end_m
+
+    months_inclusive(from, end_m)
+  end
+
   def active_students_count
     students.active.count
   end

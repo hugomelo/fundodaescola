@@ -1,6 +1,44 @@
+<script setup>
+import { ref, watch } from "vue";
+import client from "../api/client";
+import { brl, monthLabel } from "../utils/format";
+
+const props = defineProps({
+  gradeId: { type: [Number, String], default: null },
+});
+
+const plan = ref(null);
+
+async function load() {
+  if (!props.gradeId) return;
+  try {
+    const { data } = await client.get(`/grades/${props.gradeId}/cost_plan`);
+    plan.value = data;
+  } catch {
+    plan.value = null;
+  }
+}
+watch(() => props.gradeId, load, { immediate: true });
+</script>
+
 <template>
   <div class="about">
     <div id="viagens" class="card section-anchor">
+      <div v-if="plan && plan.suggested_monthly_cents != null" class="monthly-card">
+        <div class="stat">
+          <span class="value">{{ brl(plan.suggested_monthly_cents, plan.currency) }}</span>
+          <span class="label">Contribuição mensal sugerida por família</span>
+        </div>
+        <p class="muted">
+          Faltam {{ brl(plan.remaining_cents, plan.currency) }} para o total das viagens,
+          em {{ plan.remaining_months }}
+          {{ plan.remaining_months === 1 ? "mês" : "meses" }}
+          até {{ plan.accumulation_end ? monthLabel(plan.accumulation_end) : "o fim das contribuições" }},
+          divididos entre {{ plan.active_students }}
+          {{ plan.active_students === 1 ? "família" : "famílias" }}.
+        </p>
+      </div>
+
       <h2>Por que as viagens pedagógicas importam</h2>
       <p>
         As viagens pedagógicas da Aitiara Escola Waldorf transformam conteúdos de sala de
@@ -111,6 +149,14 @@
 
 <style scoped>
 .section-anchor { scroll-margin-top: 4.5rem; }
+.monthly-card {
+  margin: 0 0 1.25rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+.monthly-card .stat { margin-bottom: 0.6rem; }
+.monthly-card .value { font-size: 1.6rem; font-weight: 700; }
+.monthly-card .label { color: var(--muted); font-size: 0.85rem; }
 .about h2 { margin: 0 0 0.8rem; }
 .about h3 {
   margin: 1.25rem 0 0.5rem;
