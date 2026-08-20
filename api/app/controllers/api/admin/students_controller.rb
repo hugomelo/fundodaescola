@@ -35,6 +35,8 @@ module Api
       private
 
       def student_json(student, detailed: false)
+        contributed = student.contributed_cents
+        expected = student.expected_cents
         base = {
           id: student.id,
           grade_id: student.grade_id,
@@ -43,14 +45,14 @@ module Api
           active: student.active,
           enrolled_from: student.enrolled_from,
           enrolled_until: student.enrolled_until,
-          contributed_cents: student.contributed_cents,
+          contributed_cents: contributed,
+          expected_cents: expected,
+          balance_cents: contributed - expected,
           latest_pledge_cents: student.effective_pledge(Date.current.beginning_of_month)&.first
         }
         return base unless detailed
 
         base.merge(
-          expected_cents: student.expected_cents,
-          balance_cents: student.balance_cents,
           pledges: student.monthly_pledges.order(:month).map { |p| pledge_json(p) }
         )
       end

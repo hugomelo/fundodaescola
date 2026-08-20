@@ -6,9 +6,21 @@ import { brl, monthLabel } from "../../utils/format";
 
 const admin = useAdminStore();
 const students = ref([]);
+const onlyBehind = ref(false);
 const activeCount = computed(() => students.value.filter((s) => s.active).length);
 const showForm = ref(false);
 const form = ref({ full_name: "", display_name: "", enrolled_from: "", enrolled_until: "" });
+
+function pendingCents(s) {
+  if (s.expected_cents == null || s.contributed_cents == null) return null;
+  return s.expected_cents - s.contributed_cents;
+}
+
+const behindCount = computed(() => students.value.filter((s) => pendingCents(s) > 0).length);
+const displayed = computed(() => {
+  if (!onlyBehind.value) return students.value;
+  return students.value.filter((s) => pendingCents(s) > 0);
+});
 
 async function load() {
   const { data } = await client.get(`/admin/grades/${admin.currentGradeId}/students`);
@@ -44,12 +56,28 @@ async function toggleActive(s) {
       <button type="submit">Salvar</button>
     </form>
 
+    <div class="row filters">
+      <div class="tabs">
+        <button type="button" class="secondary" :class="{ active: !onlyBehind }" @click="onlyBehind = false">Todos</button>
+        <button type="button" class="secondary" :class="{ active: onlyBehind }" @click="onlyBehind = true">
+          Em atraso <span v-if="behindCount" class="pill">{{ behindCount }}</span>
+        </button>
+      </div>
+    </div>
+
     <table>
       <thead>
-        <tr><th>Nome</th><th>Período</th><th class="right">Contribuído</th><th class="right">Prometido atual</th><th></th></tr>
+        <tr>
+          <th>Nome</th>
+          <th>Período</th>
+          <th class="right">Contribuído</th>
+          <th class="right">Prometido atual</th>
+          <th class="right">Pendente</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-        <tr v-for="s in students" :key="s.id">
+        <tr v-for="s in displayed" :key="s.id">
           <td>
             <RouterLink :to="{ name: 'admin-student', params: { id: s.id } }">{{ s.full_name }}</RouterLink>
             <span v-if="!s.active" class="badge red" style="margin-left:.4rem">inativo</span>
@@ -57,14 +85,30 @@ async function toggleActive(s) {
           <td class="muted">{{ monthLabel(s.enrolled_from) || "—" }} → {{ monthLabel(s.enrolled_until) || "atual" }}</td>
           <td class="right">{{ s.contributed_cents != null ? brl(s.contributed_cents) : "—" }}</td>
           <td class="right">{{ s.latest_pledge_cents != null ? brl(s.latest_pledge_cents) : "—" }}</td>
+          <td
+            class="right"
+            :class="{
+              negative: pendingCents(s) > 0,
+              positive: pendingCents(s) < 0,
+            }"
+          >
+            {{ pendingCents(s) != null ? brl(pendingCents(s)) : "—" }}
+          </td>
           <td class="right"><button class="ghost" @click="toggleActive(s)">{{ s.active ? "Desativar" : "Ativar" }}</button></td>
         </tr>
       </tbody>
     </table>
+    <p v-if="!displayed.length" class="muted center" style="padding:1rem">
+      {{ onlyBehind ? "Nenhum aluno em atraso." : "Nenhum aluno cadastrado." }}
+    </p>
   </div>
 </template>
 
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .new-form label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); }
+.filters { align-items: center; margin: 0 0 1rem; }
+.tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.tabs .active { border-color: var(--amber); color: var(--ink); }
+.tabs .pill { background: var(--negative); color: #fff; border-radius: 999px; padding: 0 0.4rem; font-size: 0.75rem; margin-left: 0.3rem; }
 </style>
