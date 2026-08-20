@@ -6,6 +6,7 @@ class Student < ApplicationRecord
   has_many :payer_mappings, dependent: :nullify
   has_many :student_accesses, dependent: :destroy
   has_many :users, through: :student_accesses
+  has_many :notes, class_name: "StudentNote", dependent: :destroy
 
   validates :full_name, presence: true
 

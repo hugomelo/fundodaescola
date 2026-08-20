@@ -33,8 +33,10 @@ Rails.application.routes.draw do
       end
       resources :students, only: [:show, :update, :destroy] do
         resources :monthly_pledges, only: [:index, :create], controller: "pledges"
+        resources :notes, only: [:index, :create], controller: "student_notes"
       end
       resources :monthly_pledges, only: [:update, :destroy], controller: "pledges"
+      resources :notes, only: [:destroy], controller: "student_notes"
       resources :payments, only: [:update, :destroy]
       resources :payer_mappings, only: [:update, :destroy]
       resources :investment_entries, only: [:update, :destroy]

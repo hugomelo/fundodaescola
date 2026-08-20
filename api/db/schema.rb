@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_004000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_20_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -103,6 +103,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_004000) do
     t.index ["user_id"], name: "index_student_accesses_on_user_id"
   end
 
+  create_table "student_notes", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.date "occurred_on", null: false
+    t.bigint "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["student_id", "occurred_on"], name: "index_student_notes_on_student_id_and_occurred_on"
+    t.index ["student_id"], name: "index_student_notes_on_student_id"
+    t.index ["user_id"], name: "index_student_notes_on_user_id"
+  end
+
   create_table "students", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -163,6 +175,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_004000) do
   add_foreign_key "payments", "students"
   add_foreign_key "student_accesses", "students"
   add_foreign_key "student_accesses", "users"
+  add_foreign_key "student_notes", "students"
+  add_foreign_key "student_notes", "users"
   add_foreign_key "students", "grades"
   add_foreign_key "trip_cost_entries", "trips"
   add_foreign_key "trips", "grades"

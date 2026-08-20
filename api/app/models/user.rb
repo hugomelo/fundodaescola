@@ -7,6 +7,7 @@ class User < ApplicationRecord
 
   has_many :student_accesses, dependent: :destroy
   has_many :students, through: :student_accesses
+  has_many :student_notes, dependent: :nullify
 
   enum :role, { super_admin: 0, grade_admin: 1, parent: 2 }
 
