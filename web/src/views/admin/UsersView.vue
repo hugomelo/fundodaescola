@@ -12,6 +12,7 @@ const showForm = ref(false);
 const form = ref({ email: "", name: "", role: "parent", grade_id: "", password: "", student_ids: [] });
 const importing = ref(false);
 const importResult = ref(null);
+const createResult = ref(null);
 const sendInvite = ref(true);
 const fileInput = ref(null);
 
@@ -32,9 +33,14 @@ async function create() {
   const payload = { ...form.value };
   if (!auth.isSuperAdmin) { payload.role = "parent"; delete payload.grade_id; }
   if (payload.role !== "grade_admin") delete payload.grade_id;
-  await client.post(`/admin/users`, { user: payload });
+  if (!payload.password) delete payload.password;
+  const { data } = await client.post(`/admin/users`, { user: payload, send_invite: sendInvite.value });
   form.value = { email: "", name: "", role: "parent", grade_id: "", password: "", student_ids: [] };
   showForm.value = false;
+  importResult.value = null;
+  createResult.value = data.invited
+    ? `Usuário criado e convite enviado para ${data.user.email}.`
+    : `Usuário ${data.user.email} criado.`;
   await load();
 }
 
@@ -67,6 +73,7 @@ async function onFile(e) {
   if (!file) return;
   importing.value = true;
   importResult.value = null;
+  createResult.value = null;
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -104,6 +111,7 @@ async function onFile(e) {
       <code>aluno</code> (nome do estudante na turma selecionada).
     </p>
 
+    <p v-if="createResult" class="import-result badge green">{{ createResult }}</p>
     <p v-if="importResult" class="import-result badge green">
       Importado: {{ importResult.created }} novo(s), {{ importResult.updated }} atualizado(s),
       {{ importResult.skipped }} ignorado(s)
@@ -116,7 +124,12 @@ async function onFile(e) {
     <form v-if="showForm" class="new-form" @submit.prevent="create">
       <input v-model="form.email" type="email" placeholder="E-mail" required />
       <input v-model="form.name" placeholder="Nome" />
-      <input v-model="form.password" type="password" placeholder="Senha" required />
+      <input
+        v-model="form.password"
+        type="password"
+        :placeholder="sendInvite ? 'Senha (opcional — o convite define a senha)' : 'Senha'"
+        :required="!sendInvite"
+      />
       <select v-if="canManageRoles" v-model="form.role">
         <option value="parent">Responsável</option>
         <option value="grade_admin">Coordenador da turma</option>

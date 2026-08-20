@@ -119,7 +119,7 @@ class UsersImporter
 
     return unless @send_invite
 
-    send_invite!(user)
+    user.deliver_invite!
     @result.invited += 1
   end
 
@@ -152,11 +152,6 @@ class UsersImporter
     else
       @result.skipped += 1
     end
-  end
-
-  def send_invite!(user)
-    raw = user.generate_password_reset_token!
-    UserMailer.with(user: user, token: raw).invite.deliver_later
   end
 
   def match_student(name)

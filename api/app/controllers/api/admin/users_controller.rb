@@ -12,13 +12,21 @@ module Api
       end
 
       # POST /api/admin/users
+      # Optional top-level send_invite: generate a set-password token and email it
+      # (same flow as CSV import). Password may be omitted when inviting.
       def create
         user = User.new(user_params)
-        user.password = params.require(:user)[:password] if params.dig(:user, :password).present?
+        send_invite = invite_requested?
+        assign_create_password!(user, send_invite: send_invite)
         authorize_role_assignment!(user)
         user.save!
         sync_students(user)
-        render json: { user: user_json(user) }, status: :created
+        invited = false
+        if send_invite
+          user.deliver_invite!
+          invited = true
+        end
+        render json: { user: user_json(user), invited: invited }, status: :created
       end
 
       # PATCH /api/admin/users/:id
@@ -51,7 +59,7 @@ module Api
         result = UsersImporter.run(
           grade: grade,
           csv_content: content,
-          send_invite: ActiveModel::Type::Boolean.new.cast(params[:send_invite])
+          send_invite: invite_requested?
         )
         render json: { result: result.to_h }
       end
@@ -124,6 +132,19 @@ module Api
           student_ids: user.student_ids,
           students: user.students.map { |s| { id: s.id, display_name: s.display_name, grade_id: s.grade_id } }
         }
+      end
+
+      def invite_requested?
+        ActiveModel::Type::Boolean.new.cast(params[:send_invite])
+      end
+
+      def assign_create_password!(user, send_invite:)
+        password = params.dig(:user, :password)
+        if password.present?
+          user.password = password
+        elsif send_invite
+          user.password = SecureRandom.urlsafe_base64(24)
+        end
       end
 
       def user_params

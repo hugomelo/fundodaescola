@@ -22,7 +22,7 @@ class UserMailer < ApplicationMailer
     )
   end
 
-  # Sent after bulk import when "enviar convite" is checked.
+  # Sent when inviting a newly created user (single create or CSV import).
   # Includes a set-password link and a short explanation of the platform.
   def invite
     @user = params.fetch(:user)
@@ -31,6 +31,7 @@ class UserMailer < ApplicationMailer
     @expires_in = "24 horas"
     @students = @user.students.includes(:grade).to_a
     @grade_name = @students.map { |s| s.grade&.name }.compact.uniq.first
+    @grade_name ||= @user.grade&.name
     mail(
       to: @user.email,
       subject: self.class.branded_subject("Convite para acompanhar o fundo da turma"),

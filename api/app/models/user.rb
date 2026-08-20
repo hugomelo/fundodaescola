@@ -47,6 +47,11 @@ class User < ApplicationRecord
     raw
   end
 
+  def deliver_invite!
+    raw = generate_password_reset_token!
+    UserMailer.with(user: self, token: raw).invite.deliver_later
+  end
+
   def clear_password_reset_token!
     update!(reset_password_token: nil, reset_password_sent_at: nil)
   end
