@@ -54,11 +54,10 @@ defineProps({
           </td>
           <td>
             <span
-              v-if="r.pledged_cents != null"
-              class="badge"
-              :class="r.contributed_cents >= r.pledged_cents ? 'green' : 'red'"
+              v-if="r.pledged_cents != null && r.contributed_cents >= r.pledged_cents"
+              class="badge green"
             >
-              {{ r.contributed_cents >= r.pledged_cents ? "ok" : "abaixo" }}
+              ok
             </span>
           </td>
         </tr>
