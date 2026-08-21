@@ -48,7 +48,7 @@ const monthlyFamilies = computed(() => data.value?.monthly_contributing_families
           title="Meta até este mês"
         ></i>
       </div>
-      <div class="grid cols-4" style="margin-top: 1.2rem">
+      <div class="grid cols-5" style="margin-top: 1.2rem">
         <div class="stat"><span class="value">{{ brl(g.net_raised_cents) }}</span><span class="label">Arrecadado</span></div>
         <div class="stat">
           <span class="value">{{ g.target_to_date_cents != null ? brl(g.target_to_date_cents) : "—" }}</span>
@@ -56,6 +56,12 @@ const monthlyFamilies = computed(() => data.value?.monthly_contributing_families
         </div>
         <div class="stat"><span class="value">{{ brl(g.target_total_cents) }}</span><span class="label">Meta total</span></div>
         <div class="stat"><span class="value">{{ g.students_count }}</span><span class="label">Alunos</span></div>
+        <div class="stat">
+          <span class="value" :class="g.students_without_contribution_count > 0 ? 'negative' : 'positive'">
+            {{ g.students_without_contribution_count }}
+          </span>
+          <span class="label">Sem contribuição</span>
+        </div>
       </div>
       <p v-if="g.pace_gap_cents > 0" class="pace-gap negative">
         Faltam {{ brl(g.pace_gap_cents) }} para o ritmo necessário até este mês.
@@ -129,9 +135,9 @@ const monthlyFamilies = computed(() => data.value?.monthly_contributing_families
 .breakdown { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
 .breakdown span { margin-right: 0.5rem; }
 .pace-gap { margin: 1rem 0 0; font-size: 0.95rem; }
-.grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
 @media (max-width: 900px) {
-  .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
 }
 .pace-bar { position: relative; overflow: visible; }
 .pace-bar .raised {

@@ -54,6 +54,7 @@ module Api
         render json: {
           grade: grade_json(grade, detailed: true).merge(
             students_count: students.size,
+            students_without_contribution_count: students.count { |s| s[:contributed_cents] <= 0 },
             target_to_date_cents: target_to_date,
             pace_ratio: pace&.round(4),
             pace_gap_cents: pace_gap,
