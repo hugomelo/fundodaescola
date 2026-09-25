@@ -7,7 +7,14 @@ class UserSerializer
       phone: user.phone,
       role: user.role,
       grade_id: user.grade_id,
-      students: user.students.map { |s| { id: s.id, display_name: s.display_name, grade_id: s.grade_id } }
+      students: user.students.includes(:grade).order(:display_name).map { |s|
+        {
+          id: s.id,
+          display_name: s.display_name,
+          grade_id: s.grade_id,
+          grade_name: s.grade&.name
+        }
+      }
     }
   end
 end

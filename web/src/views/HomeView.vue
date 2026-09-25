@@ -8,13 +8,16 @@ const auth = useAuthStore();
 const router = useRouter();
 
 const students = computed(() => auth.students);
-const gradeId = computed(() => students.value[0]?.grade_id || auth.user?.grade_id);
+const gradeId = computed(() => {
+  if (auth.isParent) return auth.selectedStudent?.grade_id;
+  return auth.user?.grade_id;
+});
 
 onMounted(async () => {
   if (!auth.user) await auth.fetchMe();
-  // A parent with exactly one student goes straight to their page.
-  if (auth.isParent && auth.students.length === 1) {
-    router.replace({ name: "student", params: { id: auth.students[0].id } });
+  // Each parent view is one aluno and that aluno's fund. Pick the last choice, or the first.
+  if (auth.isParent && auth.selectedStudent) {
+    router.replace({ name: "student", params: { id: auth.selectedStudent.id } });
   }
 });
 </script>
@@ -24,7 +27,7 @@ onMounted(async () => {
     <h1>Olá, {{ auth.user?.name || "responsável" }} 🌻</h1>
     <p class="muted">Acompanhe as contribuições e o progresso do fundo de viagens.</p>
 
-    <div v-if="students.length" class="grid cols-3 students">
+    <div v-if="students.length && !auth.isParent" class="grid cols-3 students">
       <RouterLink
         v-for="s in students"
         :key="s.id"
@@ -47,7 +50,7 @@ onMounted(async () => {
       <button @click="router.push('/admin')">Abrir administração</button>
     </div>
 
-    <div style="margin-top: 1.5rem" v-if="gradeId">
+    <div style="margin-top: 1.5rem" v-if="gradeId && !auth.isParent">
       <GradeOverview :grade-id="gradeId" />
       <div class="card plan-cta">
         <div>

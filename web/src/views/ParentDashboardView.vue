@@ -49,14 +49,15 @@ function goToSection(id) {
 
 <template>
   <div class="container">
-    <RouterLink to="/" class="muted back">← Voltar</RouterLink>
-
     <div v-if="loading" class="muted">Carregando...</div>
     <p v-else-if="error" class="negative">{{ error }}</p>
 
     <template v-else-if="summary">
       <div class="title-row">
-        <h1>{{ summary.student.display_name }}</h1>
+        <div>
+          <h1>{{ summary.student.display_name }}</h1>
+          <p v-if="summary.student.grade_name" class="muted grade-name">{{ summary.student.grade_name }}</p>
+        </div>
         <span class="badge" :class="ahead ? 'green' : 'red'">
           {{ ahead ? "Em dia / adiantado" : "Em atraso" }}
         </span>
@@ -112,7 +113,7 @@ function goToSection(id) {
 </template>
 
 <style scoped>
-.back { display: inline-block; margin-bottom: 0.8rem; }
+.grade-name { margin: 0.15rem 0 0; }
 .section-anchor { scroll-margin-top: 4.5rem; }
 .page-nav {
   display: flex;

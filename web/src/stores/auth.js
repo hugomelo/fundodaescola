@@ -7,6 +7,7 @@ export const useAuthStore = defineStore("auth", {
     token: localStorage.getItem("cc_token") || null,
     user: null,
     loading: false,
+    selectedStudentId: Number(localStorage.getItem("cc_parent_student")) || null,
   }),
   getters: {
     isAuthenticated: (s) => !!s.token,
@@ -14,6 +15,11 @@ export const useAuthStore = defineStore("auth", {
     isSuperAdmin: (s) => s.user && s.user.role === "super_admin",
     isParent: (s) => s.user && s.user.role === "parent",
     students: (s) => (s.user && s.user.students) || [],
+    selectedStudent(s) {
+      const list = (s.user && s.user.students) || [];
+      if (!list.length) return null;
+      return list.find((st) => st.id === Number(s.selectedStudentId)) || list[0];
+    },
   },
   actions: {
     async login(email, password) {
@@ -40,10 +46,18 @@ export const useAuthStore = defineStore("auth", {
       this.user = data.user;
       return data.user;
     },
+    selectStudent(id) {
+      const numeric = Number(id);
+      if (!this.students.some((s) => s.id === numeric)) return;
+      this.selectedStudentId = numeric;
+      localStorage.setItem("cc_parent_student", String(numeric));
+    },
     logout() {
       this.token = null;
       this.user = null;
+      this.selectedStudentId = null;
       localStorage.removeItem("cc_token");
+      localStorage.removeItem("cc_parent_student");
       useAdminStore().reset();
     },
   },

@@ -20,6 +20,7 @@ class StudentSummary
         full_name: @student.full_name,
         display_name: @student.display_name,
         grade_id: @student.grade_id,
+        grade_name: @student.grade&.name,
         enrolled_from: @student.enrolled_from,
         enrolled_until: @student.enrolled_until
       },

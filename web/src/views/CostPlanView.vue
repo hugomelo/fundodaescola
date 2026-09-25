@@ -1,9 +1,24 @@
 <script setup>
 import { ref, watch, computed } from "vue";
+import { useRouter } from "vue-router";
 import client from "../api/client";
+import { useAuthStore } from "../stores/auth";
 import { brl, percent } from "../utils/format";
 
 const props = defineProps({ gradeId: { type: [Number, String], required: true } });
+const auth = useAuthStore();
+const router = useRouter();
+const backStudent = computed(() =>
+  auth.students.find((s) => String(s.grade_id) === String(props.gradeId)) || auth.selectedStudent
+);
+
+function goBack() {
+  if (backStudent.value) {
+    router.push({ name: "student", params: { id: backStudent.value.id } });
+  } else {
+    router.push({ name: "home" });
+  }
+}
 const plan = ref(null);
 const error = ref("");
 
@@ -29,7 +44,7 @@ const remaining = computed(() =>
 
 <template>
   <div class="container">
-    <RouterLink to="/" class="muted">← Voltar</RouterLink>
+    <button type="button" class="ghost back" @click="goBack">← Voltar</button>
     <p v-if="error" class="negative">{{ error }}</p>
 
     <template v-if="plan">
@@ -97,6 +112,7 @@ const remaining = computed(() =>
 </template>
 
 <style scoped>
+.back { padding-left: 0; margin-bottom: 0.8rem; }
 tfoot td { border-top: 2px solid var(--line); }
 .badge { margin-left: 0.4rem; }
 </style>
