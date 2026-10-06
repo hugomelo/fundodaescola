@@ -2,9 +2,12 @@ module Api
   module Admin
     class StudentsController < BaseController
       # GET /api/admin/grades/:grade_id/students
+      # Optional filters: contacted_on=YYYY-MM-DD, contacted_since=YYYY-MM-DD
       def index
         grade = find_grade!
-        render json: { students: grade.students.order(:full_name).map { |s| student_json(s) } }
+        students = filtered_by_contact(grade.students.order(:full_name))
+        last_contacts = StudentNote.where(student_id: students.select(:id)).group(:student_id).maximum(:occurred_on)
+        render json: { students: students.map { |s| student_json(s, last_contacts: last_contacts) } }
       end
 
       # POST /api/admin/grades/:grade_id/students
@@ -34,9 +37,10 @@ module Api
 
       private
 
-      def student_json(student, detailed: false)
+      def student_json(student, detailed: false, last_contacts: nil)
         contributed = student.contributed_cents
         expected = student.expected_cents
+        contact_on = last_contacts ? last_contacts[student.id] : student.last_contact_on
         base = {
           id: student.id,
           grade_id: student.grade_id,
@@ -48,7 +52,8 @@ module Api
           contributed_cents: contributed,
           expected_cents: expected,
           balance_cents: contributed - expected,
-          latest_pledge_cents: student.effective_pledge(Date.current.beginning_of_month)&.first
+          latest_pledge_cents: student.effective_pledge(Date.current.beginning_of_month)&.first,
+          last_contact_on: contact_on
         }
         return base unless detailed
 
@@ -63,6 +68,25 @@ module Api
 
       def student_params
         params.require(:student).permit(:full_name, :display_name, :active, :enrolled_from, :enrolled_until)
+      end
+
+      def filtered_by_contact(scope)
+        if (date = contact_filter_date(:contacted_on))
+          scope.contacted_on(date)
+        elsif (date = contact_filter_date(:contacted_since))
+          scope.contacted_since(date)
+        else
+          scope
+        end
+      end
+
+      def contact_filter_date(key)
+        raw = params[key]
+        return if raw.blank?
+
+        Date.iso8601(raw)
+      rescue Date::Error
+        nil
       end
     end
   end

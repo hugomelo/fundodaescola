@@ -11,6 +11,8 @@ class Student < ApplicationRecord
   validates :full_name, presence: true
 
   scope :active, -> { where(active: true) }
+  scope :contacted_on, ->(date) { where(id: StudentNote.where(occurred_on: date).select(:student_id)) }
+  scope :contacted_since, ->(date) { where(id: StudentNote.where(occurred_on: date..).select(:student_id)) }
 
   before_validation :default_display_name
 
@@ -67,6 +69,11 @@ class Student < ApplicationRecord
   # Positive => ahead of pledge, negative => behind.
   def balance_cents(up_to: Date.current.beginning_of_month)
     contributed_cents - expected_cents(up_to: up_to)
+  end
+
+  # Date of the most recent contact note, if any.
+  def last_contact_on
+    notes.maximum(:occurred_on)
   end
 
   private

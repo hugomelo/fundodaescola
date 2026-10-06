@@ -2,15 +2,36 @@
 import { ref, watch, computed } from "vue";
 import client from "../../api/client";
 import { useAdminStore } from "../../stores/admin";
-import { brl, monthLabel } from "../../utils/format";
+import { brl, monthLabel, dateLabel } from "../../utils/format";
 
 const admin = useAdminStore();
 const students = ref([]);
 const onlyBehind = ref(false);
 const sortKey = ref("full_name");
+const contactFilter = ref("all");
+const contactOn = ref("");
 const activeCount = computed(() => students.value.filter((s) => s.active).length);
 const showForm = ref(false);
 const form = ref({ full_name: "", display_name: "", enrolled_from: "", enrolled_until: "" });
+
+function isoMonthsAgo(months) {
+  const d = new Date();
+  d.setMonth(d.getMonth() - months);
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function contactParams() {
+  if (contactFilter.value === "month") return { contacted_since: isoMonthsAgo(1) };
+  if (contactFilter.value === "date" && contactOn.value) return { contacted_on: contactOn.value };
+  return {};
+}
+
+function showContactsOnDate() {
+  if (!contactOn.value) contactOn.value = isoMonthsAgo(0);
+  contactFilter.value = "date";
+}
 
 function pendingCents(s) {
   if (s.expected_cents == null || s.contributed_cents == null) return null;
@@ -24,15 +45,37 @@ const displayed = computed(() => {
     : students.value;
   return [...list].sort((a, b) => {
     if (sortKey.value === "atraso") return (pendingCents(b) || 0) - (pendingCents(a) || 0);
+    if (sortKey.value === "last_contact") {
+      if (a.last_contact_on === b.last_contact_on) return a.full_name.localeCompare(b.full_name, "pt-BR");
+      if (!a.last_contact_on) return 1;
+      if (!b.last_contact_on) return -1;
+      return b.last_contact_on.localeCompare(a.last_contact_on);
+    }
     return a.full_name.localeCompare(b.full_name, "pt-BR");
   });
 });
 
+const emptyMessage = computed(() => {
+  if (!students.value.length) {
+    if (contactFilter.value === "month") return "Nenhum aluno com contato no último mês.";
+    if (contactFilter.value === "date" && contactOn.value) {
+      return `Nenhum aluno com contato em ${dateLabel(contactOn.value)}.`;
+    }
+    return "Nenhum aluno cadastrado.";
+  }
+  if (onlyBehind.value) return "Nenhum aluno em atraso.";
+  return "";
+});
+
 async function load() {
-  const { data } = await client.get(`/admin/grades/${admin.currentGradeId}/students`);
+  if (!admin.currentGradeId) return;
+  const { data } = await client.get(`/admin/grades/${admin.currentGradeId}/students`, {
+    params: contactParams(),
+  });
   students.value = data.students;
 }
 watch(() => admin.currentGradeId, load, { immediate: true });
+watch(() => JSON.stringify(contactParams()), load);
 
 async function create() {
   await client.post(`/admin/grades/${admin.currentGradeId}/students`, { student: form.value });
@@ -72,7 +115,21 @@ async function toggleActive(s) {
       <select v-model="sortKey">
         <option value="full_name">Ordenar por nome</option>
         <option value="atraso">Ordenar por atraso</option>
+        <option value="last_contact">Ordenar por último contato</option>
       </select>
+    </div>
+
+    <div class="row filters contact-filters">
+      <span class="muted filter-label">Contato</span>
+      <div class="tabs">
+        <button type="button" class="secondary" :class="{ active: contactFilter === 'all' }" @click="contactFilter = 'all'">Todos</button>
+        <button type="button" class="secondary" :class="{ active: contactFilter === 'month' }" @click="contactFilter = 'month'">Último mês</button>
+        <button type="button" class="secondary" :class="{ active: contactFilter === 'date' }" @click="showContactsOnDate">Em uma data</button>
+      </div>
+      <label v-if="contactFilter === 'date'" class="date-filter">
+        Data do contato
+        <input v-model="contactOn" type="date" />
+      </label>
     </div>
 
     <table>
@@ -83,6 +140,7 @@ async function toggleActive(s) {
           <th class="right">Contribuído</th>
           <th class="right">Prometido atual</th>
           <th class="right">Pendente</th>
+          <th>Último contato</th>
           <th></th>
         </tr>
       </thead>
@@ -104,6 +162,7 @@ async function toggleActive(s) {
           >
             {{ pendingCents(s) != null ? brl(pendingCents(s)) : "—" }}
           </td>
+          <td class="muted">{{ dateLabel(s.last_contact_on) || "—" }}</td>
           <td class="right actions">
             <RouterLink
               class="btn-link"
@@ -115,7 +174,7 @@ async function toggleActive(s) {
       </tbody>
     </table>
     <p v-if="!displayed.length" class="muted center" style="padding:1rem">
-      {{ onlyBehind ? "Nenhum aluno em atraso." : "Nenhum aluno cadastrado." }}
+      {{ emptyMessage }}
     </p>
   </div>
 </template>
@@ -124,6 +183,9 @@ async function toggleActive(s) {
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .new-form label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); }
 .filters { align-items: center; justify-content: space-between; margin: 0 0 1rem; }
+.contact-filters { justify-content: flex-start; align-items: flex-end; gap: 0.6rem; }
+.filter-label { font-size: 0.85rem; padding-bottom: 0.45rem; }
+.date-filter { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); gap: 0.2rem; }
 .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .tabs .active { border-color: var(--amber); color: var(--ink); }
 .tabs .pill { background: var(--negative); color: #fff; border-radius: 999px; padding: 0 0.4rem; font-size: 0.75rem; margin-left: 0.3rem; }

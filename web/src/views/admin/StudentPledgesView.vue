@@ -2,6 +2,7 @@
 import { ref, watch, computed } from "vue";
 import client from "../../api/client";
 import { brl, monthLabel } from "../../utils/format";
+import StudentContactNotes from "../../components/StudentContactNotes.vue";
 
 const props = defineProps({ id: { type: [Number, String], required: true } });
 const student = ref(null);
@@ -162,6 +163,10 @@ const pledges = computed(() => student.value?.pledges || []);
         </tbody>
       </table>
       <p v-if="!pledges.length" class="muted center" style="padding:1rem">Nenhum mês cadastrado.</p>
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <StudentContactNotes :student-id="id" />
     </div>
   </div>
 </template>
