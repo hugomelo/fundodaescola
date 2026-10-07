@@ -4,7 +4,7 @@ module Api
       # GET /api/admin/students/:student_id/monthly_pledges
       def index
         student = find_student_in_scope!(params[:student_id])
-        render json: { pledges: student.monthly_pledges.order(:month).map { |p| pledge_json(p) } }
+        render json: { pledges: student.monthly_pledges.order(month: :desc).map { |p| pledge_json(p) } }
       end
 
       # POST /api/admin/students/:student_id/monthly_pledges

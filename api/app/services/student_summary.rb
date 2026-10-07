@@ -43,7 +43,7 @@ class StudentSummary
   end
 
   def month_rows
-    months.map do |m|
+    months.reverse_each.map do |m|
       eff = @student.effective_pledge(m, pledge_entries) # [amount, status] or nil
       payments = payments_by_month[m] || []
       {
@@ -82,7 +82,7 @@ class StudentSummary
       grouped = Hash.new { |h, k| h[k] = [] }
       @student.payments
               .where(kind: :student_contribution)
-              .order(:paid_on, :id)
+              .order(paid_on: :desc, id: :desc)
               .pluck(:id, :paid_on, :description, :amount_cents)
               .each do |id, paid_on, description, amount_cents|
         month = paid_on.to_date.beginning_of_month

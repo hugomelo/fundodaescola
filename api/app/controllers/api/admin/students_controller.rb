@@ -58,7 +58,7 @@ module Api
         return base unless detailed
 
         base.merge(
-          pledges: student.monthly_pledges.order(:month).map { |p| pledge_json(p) }
+          pledges: student.monthly_pledges.order(month: :desc).map { |p| pledge_json(p) }
         )
       end
 
