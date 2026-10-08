@@ -9,7 +9,7 @@ const auth = useAuthStore();
 const users = ref([]);
 const students = ref([]);
 const showForm = ref(false);
-const form = ref({ email: "", name: "", role: "parent", grade_id: "", password: "", student_ids: [] });
+const form = ref({ email: "", name: "", phone: "", role: "parent", grade_id: "", password: "", student_ids: [] });
 const importing = ref(false);
 const importResult = ref(null);
 const createResult = ref(null);
@@ -35,7 +35,7 @@ async function create() {
   if (payload.role !== "grade_admin") delete payload.grade_id;
   if (!payload.password) delete payload.password;
   const { data } = await client.post(`/admin/users`, { user: payload, send_invite: sendInvite.value });
-  form.value = { email: "", name: "", role: "parent", grade_id: "", password: "", student_ids: [] };
+  form.value = { email: "", name: "", phone: "", role: "parent", grade_id: "", password: "", student_ids: [] };
   showForm.value = false;
   importResult.value = null;
   createResult.value = data.invited
@@ -50,6 +50,13 @@ async function changeRole(u, role) {
   // A coordinator needs a grade; default to the currently selected one.
   if (role === "grade_admin") payload.grade_id = u.grade_id || admin.currentGradeId;
   await client.patch(`/admin/users/${u.id}`, { user: payload });
+  await load();
+}
+
+async function changePhone(u, phone) {
+  const value = phone.trim();
+  if (value === (u.phone || "")) return;
+  await client.patch(`/admin/users/${u.id}`, { user: { phone: value } });
   await load();
 }
 
@@ -124,6 +131,7 @@ async function onFile(e) {
     <form v-if="showForm" class="new-form" @submit.prevent="create">
       <input v-model="form.email" type="email" placeholder="E-mail" required />
       <input v-model="form.name" placeholder="Nome" />
+      <input v-model="form.phone" type="tel" placeholder="Telefone" />
       <input
         v-model="form.password"
         type="password"
@@ -149,11 +157,20 @@ async function onFile(e) {
     </form>
 
     <table>
-      <thead><tr><th>E-mail</th><th>Nome</th><th>Papel</th><th>Turma / Alunos</th><th></th></tr></thead>
+      <thead><tr><th>E-mail</th><th>Nome</th><th>Telefone</th><th>Papel</th><th>Turma / Alunos</th><th></th></tr></thead>
       <tbody>
         <tr v-for="u in users" :key="u.id">
           <td>{{ u.email }}</td>
           <td>{{ u.name }}</td>
+          <td>
+            <input
+              class="phone-input"
+              type="tel"
+              :value="u.phone || ''"
+              placeholder="(11) 99999-9999"
+              @change="changePhone(u, $event.target.value)"
+            />
+          </td>
           <td>
             <select v-if="canManageRoles && u.id !== auth.user.id" :value="u.role" @change="changeRole(u, $event.target.value)">
               <option value="parent">Responsável</option>
@@ -182,6 +199,7 @@ async function onFile(e) {
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .students-pick { display: flex; flex-direction: column; font-size: 0.8rem; }
+.phone-input { width: 10.5rem; }
 .actions-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .invite-check { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted, #7a7266); cursor: pointer; }
 .import-btn { background: var(--primary); color: #fff; padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer; }

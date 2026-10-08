@@ -89,6 +89,14 @@ async function removePledge(p) {
 }
 
 const pledges = computed(() => student.value?.pledges || []);
+const guardians = computed(() => student.value?.guardians || []);
+
+function whatsAppUrl(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (digits.length < 10) return null;
+  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${withCountry}`;
+}
 </script>
 
 <template>
@@ -105,6 +113,24 @@ const pledges = computed(() => student.value?.pledges || []);
         <span class="value" :class="student.balance_cents >= 0 ? 'positive' : 'negative'">{{ brl(student.balance_cents) }}</span>
         <span class="label">Saldo</span>
       </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <h3>Responsáveis</h3>
+      <ul v-if="guardians.length" class="guardians">
+        <li v-for="g in guardians" :key="g.id">
+          <span>{{ g.name || g.email }}</span>
+          <a
+            v-if="whatsAppUrl(g.phone)"
+            class="wa-link"
+            :href="whatsAppUrl(g.phone)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{{ g.phone }}</a>
+          <span v-else class="muted">{{ g.phone || "sem telefone" }}</span>
+        </li>
+      </ul>
+      <p v-else class="muted" style="margin:.4rem 0 0">Nenhum responsável vinculado.</p>
     </div>
 
     <div class="card" style="margin-top:1.5rem">
@@ -174,4 +200,7 @@ const pledges = computed(() => student.value?.pledges || []);
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 1rem 0; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .new-form label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); gap: 0.2rem; }
+.guardians { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.guardians li { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; align-items: baseline; }
+.wa-link { font-weight: 600; }
 </style>

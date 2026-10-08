@@ -58,8 +58,13 @@ module Api
         return base unless detailed
 
         base.merge(
-          pledges: student.monthly_pledges.order(month: :desc).map { |p| pledge_json(p) }
+          pledges: student.monthly_pledges.order(month: :desc).map { |p| pledge_json(p) },
+          guardians: student.users.order(:name, :email).map { |u| guardian_json(u) }
         )
+      end
+
+      def guardian_json(user)
+        { id: user.id, name: user.name, email: user.email, phone: user.phone }
       end
 
       def pledge_json(pledge)
