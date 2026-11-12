@@ -156,8 +156,17 @@ async function onFile(e) {
       <button type="submit">Salvar</button>
     </form>
 
-    <table>
-      <thead><tr><th>E-mail</th><th>Nome</th><th>Telefone</th><th>Papel</th><th>Turma / Alunos</th><th></th></tr></thead>
+    <div class="users-table-wrap">
+      <table class="users-table">
+        <colgroup>
+          <col style="width: 28%" />
+          <col style="width: 22%" />
+          <col style="width: 18%" />
+          <col style="width: 16%" />
+          <col style="width: 11%" />
+          <col style="width: 5%" />
+        </colgroup>
+        <thead><tr><th>E-mail</th><th>Nome</th><th>Telefone</th><th>Papel</th><th>Turma / Alunos</th><th></th></tr></thead>
       <tbody>
         <tr v-for="u in users" :key="u.id">
           <td>{{ u.email }}</td>
@@ -192,14 +201,20 @@ async function onFile(e) {
           <td class="right"><button class="ghost" @click="remove(u)">✕</button></td>
         </tr>
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .new-form { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; padding: 1rem; background: #faf7f0; border-radius: 8px; }
 .students-pick { display: flex; flex-direction: column; font-size: 0.8rem; }
-.phone-input { width: 10.5rem; }
+.users-table-wrap { max-width: 100%; overflow-x: auto; }
+.users-table { table-layout: fixed; min-width: 800px; }
+.users-table th, .users-table td { overflow-wrap: anywhere; vertical-align: middle; }
+.users-table .phone-input, .users-table select { width: 100%; min-width: 0; }
+.users-table td:last-child { padding-left: 0; padding-right: 0; white-space: nowrap; }
+.users-table .ghost { padding: 0.35rem 0.5rem; }
 .actions-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .invite-check { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted, #7a7266); cursor: pointer; }
 .import-btn { background: var(--primary); color: #fff; padding: 0.55rem 1rem; border-radius: 8px; cursor: pointer; }
